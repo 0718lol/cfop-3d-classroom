@@ -1,0 +1,368 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { algorithms } from './algorithms.js';
+
+const crossCase = {
+  category: 'CROSS', number: 1, name: '底层十字示例', group: '理解式教学',
+  setup: "F R U R' U' F'", algorithm: "F U R U' R' F'"
+};
+
+const stages = [
+  { id: 'cross', short: '十字', en: 'CROSS', cases: [crossCase] },
+  { id: 'f2l', short: '前两层', en: 'F2L', cases: algorithms.filter(item => item.category === 'F2L') },
+  { id: 'oll', short: '顶面定向', en: 'OLL', cases: algorithms.filter(item => item.category === 'OLL') },
+  { id: 'pll', short: '顶层排列', en: 'PLL', cases: algorithms.filter(item => item.category === 'PLL') }
+];
+
+const stageCopy = {
+  CROSS: {
+    goal: '先让底面四个棱块归位，并让侧面颜色与中心块对齐。十字以观察和规划为主，不需要背固定公式。',
+    focus: '盯住目标棱块，观察它的朝向、落点和对应侧面中心。'
+  },
+  F2L: {
+    goal: '识别角块与棱块的相对位置，先配对，再把这一对插入正确槽位。',
+    focus: '观察角块和棱块如何从当前形态转成配对状态，再一起进入右前槽。'
+  },
+  OLL: {
+    goal: '只调整最后一层块的朝向，让顶面成为统一颜色，侧面暂时不要求归位。',
+    focus: '辨认顶面图案和侧面黄色贴纸的位置，再选择对应 OLL。'
+  },
+  PLL: {
+    goal: '保持顶面朝向不变，交换最后一层块的位置，完成整个魔方。',
+    focus: '先找侧面的色块、车灯或完整色条，再判断 PLL 类型和持 cube 方向。'
+  }
+};
+
+const movesOf = value => value.split(/\s+/).filter(Boolean);
+
+const sceneHost = document.getElementById('scene');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+camera.position.set(7.6, 6.4, 8.6);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+sceneHost.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 7;
+controls.maxDistance = 18;
+controls.target.set(0, 0, 0);
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x839087, 2.4));
+const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+keyLight.position.set(5, 9, 7);
+keyLight.castShadow = true;
+scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0xffffff, 1.6);
+fillLight.position.set(-6, 2, -4);
+scene.add(fillLight);
+
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(20, 20),
+  new THREE.ShadowMaterial({ color: 0x414842, opacity: 0.14 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -2.35;
+ground.receiveShadow = true;
+scene.add(ground);
+
+const cubeRoot = new THREE.Group();
+cubeRoot.rotation.x = -0.05;
+scene.add(cubeRoot);
+
+const COLORS = {
+  R: 0xd9463b, L: 0xef7f22, U: 0xf1cf2f,
+  D: 0xf4f5ef, F: 0x2c9a62, B: 0x2f65c5,
+  body: 0x171a18, hidden: 0x202420
+};
+const cubies = [];
+const cubieSize = 1.34;
+const gap = 0.12;
+
+function faceMaterials(x, y, z) {
+  const material = value => new THREE.MeshStandardMaterial({ color: value, roughness: 0.34, metalness: 0.02 });
+  return [
+    material(x === 1 ? COLORS.R : COLORS.body),
+    material(x === -1 ? COLORS.L : COLORS.body),
+    material(y === 1 ? COLORS.U : COLORS.body),
+    material(y === -1 ? COLORS.D : COLORS.body),
+    material(z === 1 ? COLORS.F : COLORS.body),
+    material(z === -1 ? COLORS.B : COLORS.body)
+  ];
+}
+
+function buildCube() {
+  for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
+    if (x === 0 && y === 0 && z === 0) continue;
+    const geometry = new THREE.BoxGeometry(cubieSize, cubieSize, cubieSize, 2, 2, 2);
+    const cubie = new THREE.Mesh(geometry, faceMaterials(x, y, z));
+    cubie.position.set(x * (cubieSize + gap), y * (cubieSize + gap), z * (cubieSize + gap));
+    cubie.castShadow = true;
+    cubie.receiveShadow = true;
+    cubie.userData.coord = new THREE.Vector3(x, y, z);
+    cubies.push(cubie);
+    cubeRoot.add(cubie);
+  }
+}
+buildCube();
+
+const quarter = Math.PI / 2;
+const moveDefs = {
+  R: { axis: 'x', angle: -quarter, select: value => value === 1 },
+  L: { axis: 'x', angle: quarter, select: value => value === -1 },
+  U: { axis: 'y', angle: -quarter, select: value => value === 1 },
+  D: { axis: 'y', angle: quarter, select: value => value === -1 },
+  F: { axis: 'z', angle: -quarter, select: value => value === 1 },
+  B: { axis: 'z', angle: quarter, select: value => value === -1 },
+  r: { axis: 'x', angle: -quarter, select: value => value >= 0 },
+  l: { axis: 'x', angle: quarter, select: value => value <= 0 },
+  u: { axis: 'y', angle: -quarter, select: value => value >= 0 },
+  d: { axis: 'y', angle: quarter, select: value => value <= 0 },
+  f: { axis: 'z', angle: -quarter, select: value => value >= 0 },
+  b: { axis: 'z', angle: quarter, select: value => value <= 0 },
+  M: { axis: 'x', angle: quarter, select: value => value === 0 },
+  E: { axis: 'y', angle: quarter, select: value => value === 0 },
+  S: { axis: 'z', angle: -quarter, select: value => value === 0 },
+  x: { axis: 'x', angle: -quarter, select: () => true },
+  y: { axis: 'y', angle: -quarter, select: () => true },
+  z: { axis: 'z', angle: -quarter, select: () => true }
+};
+
+let activeStage = 0;
+let activeCase = 0;
+let step = 0;
+let moving = false;
+let playing = false;
+let speed = 1;
+let playTimer = null;
+
+function parseMove(notation) {
+  const base = moveDefs[notation[0]];
+  if (!base) throw new Error(`Unsupported move: ${notation}`);
+  const prime = notation.includes("'");
+  const twice = notation.includes('2');
+  return { ...base, angle: base.angle * (prime ? -1 : 1) * (twice ? 2 : 1) };
+}
+
+function inverseMove(notation) {
+  if (notation.includes('2')) return notation;
+  return notation.includes("'") ? notation[0] : `${notation}'`;
+}
+
+function rotateCoord(coord, axis, angle) {
+  const v = coord.clone();
+  const q = new THREE.Quaternion().setFromAxisAngle(
+    new THREE.Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0), angle
+  );
+  v.applyQuaternion(q);
+  v.set(Math.round(v.x), Math.round(v.y), Math.round(v.z));
+  return v;
+}
+
+function executeMove(notation, animate = true) {
+  if (moving) return Promise.resolve(false);
+  moving = true;
+  document.querySelector('#turnBadge strong').textContent = notation;
+  const def = parseMove(notation);
+  const selected = cubies.filter(c => def.select(Math.round(c.userData.coord[def.axis])));
+  const pivot = new THREE.Group();
+  cubeRoot.add(pivot);
+  selected.forEach(c => pivot.attach(c));
+  const duration = animate ? 440 / speed * (notation.includes('2') ? 1.35 : 1) : 0;
+  const started = performance.now();
+  return new Promise(resolve => {
+    function frame(now) {
+      const t = duration ? Math.min(1, (now - started) / duration) : 1;
+      const eased = 1 - Math.pow(1 - t, 3);
+      pivot.rotation[def.axis] = def.angle * eased;
+      if (t < 1) return requestAnimationFrame(frame);
+      pivot.rotation[def.axis] = def.angle;
+      pivot.updateMatrixWorld();
+      selected.forEach(c => {
+        cubeRoot.attach(c);
+        c.userData.coord = rotateCoord(c.userData.coord, def.axis, def.angle);
+        c.position.set(
+          c.userData.coord.x * (cubieSize + gap),
+          c.userData.coord.y * (cubieSize + gap),
+          c.userData.coord.z * (cubieSize + gap)
+        );
+        c.rotation.x = Math.round(c.rotation.x / (Math.PI / 2)) * (Math.PI / 2);
+        c.rotation.y = Math.round(c.rotation.y / (Math.PI / 2)) * (Math.PI / 2);
+        c.rotation.z = Math.round(c.rotation.z / (Math.PI / 2)) * (Math.PI / 2);
+      });
+      cubeRoot.remove(pivot);
+      moving = false;
+      resolve(true);
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+function restoreSolved() {
+  stopPlayback();
+  cubies.forEach(c => cubeRoot.remove(c));
+  cubies.splice(0).forEach(c => { c.geometry.dispose(); c.material.forEach(m => m.dispose()); });
+  buildCube();
+}
+
+async function prepareCase() {
+  restoreSolved();
+  step = 0;
+  const sequence = movesOf(currentCase().setup);
+  for (const move of sequence) await executeMove(move, false);
+  document.querySelector('#turnBadge strong').textContent = '准备';
+  updateProgress();
+}
+
+function currentCase() {
+  return stages[activeStage].cases[activeCase];
+}
+
+function currentMoves() {
+  return movesOf(currentCase().algorithm);
+}
+
+function renderStages() {
+  const host = document.getElementById('stageList');
+  host.innerHTML = stages.map((stage, index) => `
+    <button class="stage-button ${index === activeStage ? 'active' : ''}" data-stage="${index}" type="button">
+      <span class="stage-index">${String(index + 1).padStart(2, '0')}</span>
+      <span class="stage-name"><strong>${stage.short}</strong><span>${stage.en}</span></span>
+      <span class="stage-count">${stage.cases.length}</span>
+    </button>`).join('');
+  host.querySelectorAll('button').forEach(button => button.addEventListener('click', async () => {
+    if (moving) return;
+    activeStage = Number(button.dataset.stage);
+    activeCase = 0;
+    renderLesson();
+    await prepareCase();
+  }));
+}
+
+function renderCasePicker() {
+  const picker = document.getElementById('caseSelect');
+  picker.innerHTML = stages[activeStage].cases.map((item, index) => {
+    const prefix = stages[activeStage].en === 'PLL' ? `PLL ${item.name}` : item.name;
+    return `<option value="${index}" ${index === activeCase ? 'selected' : ''}>${prefix} · ${item.group}</option>`;
+  }).join('');
+}
+
+function renderLesson() {
+  const stage = stages[activeStage];
+  const item = currentCase();
+  const copy = stageCopy[stage.en];
+  const title = stage.en === 'PLL' ? `PLL ${item.name}` : item.name;
+  renderStages();
+  renderCasePicker();
+  document.getElementById('stageNumber').textContent = String(item.number).padStart(2, '0');
+  document.getElementById('stageEnglish').textContent = `${stage.en} · ${item.group}`;
+  document.getElementById('lessonTitle').textContent = title;
+  document.getElementById('lessonGoal').textContent = copy.goal;
+  document.getElementById('focusText').textContent = copy.focus;
+  document.getElementById('algorithm').innerHTML = currentMoves().map((move, index) => `<span class="move-token" data-step="${index}">${move}</span>`).join('');
+  updateProgress();
+}
+
+function updateProgress() {
+  const algorithm = currentMoves();
+  document.getElementById('stepCount').textContent = `${step} / ${algorithm.length}`;
+  document.querySelectorAll('.move-token').forEach((token, index) => {
+    token.classList.toggle('done', index < step);
+    token.classList.toggle('current', index === step && step < algorithm.length);
+  });
+  document.getElementById('previous').disabled = step === 0 || moving;
+  document.getElementById('next').disabled = step === algorithm.length || moving;
+  if (step === algorithm.length) document.querySelector('#turnBadge strong').textContent = '完成';
+}
+
+async function nextStep() {
+  const algorithm = currentMoves();
+  if (moving || step >= algorithm.length) return false;
+  const ok = await executeMove(algorithm[step]);
+  if (ok) step++;
+  updateProgress();
+  return ok;
+}
+
+async function previousStep() {
+  if (moving || step <= 0) return;
+  stopPlayback();
+  const move = currentMoves()[step - 1];
+  const ok = await executeMove(inverseMove(move));
+  if (ok) step--;
+  updateProgress();
+}
+
+function stopPlayback() {
+  playing = false;
+  clearTimeout(playTimer);
+  const play = document.getElementById('play');
+  play.classList.remove('playing');
+  play.querySelector('span').textContent = '播放演示';
+}
+
+async function playback() {
+  if (!playing) return;
+  const advanced = await nextStep();
+  if (!advanced || step >= currentMoves().length) return stopPlayback();
+  playTimer = setTimeout(playback, 240 / speed);
+}
+
+document.getElementById('play').addEventListener('click', async () => {
+  if (playing) return stopPlayback();
+  if (step >= currentMoves().length) await prepareCase();
+  playing = true;
+  const play = document.getElementById('play');
+  play.classList.add('playing');
+  play.querySelector('span').textContent = '暂停演示';
+  playback();
+});
+document.getElementById('next').addEventListener('click', () => { stopPlayback(); nextStep(); });
+document.getElementById('previous').addEventListener('click', previousStep);
+document.getElementById('resetLesson').addEventListener('click', prepareCase);
+document.getElementById('caseSelect').addEventListener('change', async event => {
+  if (moving) return;
+  activeCase = Number(event.target.value);
+  renderLesson();
+  await prepareCase();
+});
+document.getElementById('resetView').addEventListener('click', () => {
+  camera.position.set(7.6, 6.4, 8.6);
+  controls.target.set(0, 0, 0);
+  controls.update();
+});
+document.getElementById('speed').addEventListener('input', event => {
+  speed = Number(event.target.value);
+  document.getElementById('speedValue').textContent = `${speed.toFixed(1)}×`;
+});
+window.addEventListener('keydown', event => {
+  if (event.target.matches('input, button')) return;
+  if (event.key === 'ArrowRight') nextStep();
+  if (event.key === 'ArrowLeft') previousStep();
+  if (event.code === 'Space') { event.preventDefault(); document.getElementById('play').click(); }
+});
+
+function resize() {
+  const width = sceneHost.clientWidth;
+  const height = sceneHost.clientHeight;
+  renderer.setSize(width, height, false);
+  camera.aspect = width / Math.max(height, 1);
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(sceneHost);
+
+function render() {
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(render);
+}
+
+renderLesson();
+prepareCase();
+resize();
+render();
