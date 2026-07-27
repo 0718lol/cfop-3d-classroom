@@ -10,6 +10,7 @@
 body { margin: 0; min-width: 320px; min-height: 100vh; background: #f4f5f1; }
 button, input { font: inherit; }
 button { color: inherit; }
+[hidden] { display: none !important; }
 
 .app-shell { min-height: 100vh; display: grid; grid-template-rows: 72px minmax(0, 1fr); }
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid #d7d9d4; background: rgba(244,245,241,.94); z-index: 5; }
@@ -81,6 +82,10 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
 .turn-badge strong { font-size: 17px; min-width: 36px; text-align: center; }
 .turn-badge span { color: #afb5b0; }
 .coach-panel { border-left: 1px solid #d7d9d4; padding: 28px 24px 22px; display: flex; flex-direction: column; overflow: auto; }
+.mode-switch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-bottom: 24px; padding: 3px; background: #e4e7e1; border-radius: 4px; }
+.mode-switch button { min-height: 32px; padding: 0 8px; background: transparent; border-radius: 3px; color: #737973; font-size: 11px; font-weight: 600; }
+.mode-switch button:hover { background: #eef0ec; }
+.mode-switch button.active { background: #fff; color: #202521; box-shadow: 0 1px 3px rgba(31,35,32,.12); }
 .lesson-copy { position: relative; padding-right: 42px; }
 .stage-number { position: absolute; right: 0; top: -8px; font-size: 38px; color: #d7dad4; font-weight: 700; }
 .lesson-copy h1 { margin: 8px 0 9px; font-size: 25px; letter-spacing: 0; }
@@ -95,6 +100,10 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
 .algorithm-block { margin-top: 26px; }
 .algorithm-heading { display: flex; justify-content: space-between; color: #777d77; font-size: 11px; margin-bottom: 10px; }
 .algorithm { display: flex; gap: 7px; flex-wrap: wrap; min-height: 38px; }
+.formula-mask { display: none; min-height: 58px; align-items: center; justify-content: center; flex-direction: column; gap: 3px; border: 1px dashed #bdc3bc; background: #eef0ec; color: #2f3530; }
+.formula-mask span { color: #777d77; font-size: 10px; }
+.algorithm-block.concealed .algorithm { display: none; }
+.algorithm-block.concealed .formula-mask { display: flex; }
 .move-token { min-width: 35px; height: 35px; display: grid; place-items: center; padding: 0 7px; border: 1px solid #cfd2cc; border-radius: 3px; background: #fff; color: #313632; font: 600 14px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .move-token.done { background: #dde3dc; border-color: #dde3dc; color: #7b817b; }
 .move-token.current { background: #f0c92e; border-color: #f0c92e; color: #24271f; }
@@ -104,6 +113,13 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
 .play-button .pause-icon { display: none; }
 .play-button.playing .play-icon { display: none; }
 .play-button.playing .pause-icon { display: block; }
+.formula-toggle { width: 100%; height: 40px; margin-top: 12px; border: 1px solid #c9cdc7; border-radius: 4px; background: #fff; color: #303631; font-size: 12px; font-weight: 600; }
+.formula-toggle:hover { background: #ecefe9; }
+.test-panel { display: grid; gap: 10px; margin-top: 14px; }
+.test-time { display: flex; justify-content: space-between; align-items: baseline; padding: 11px 12px; border-top: 1px solid #d7dad4; border-bottom: 1px solid #d7dad4; color: #737973; font-size: 10px; }
+.test-time strong { color: #242924; font: 700 22px ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
+.test-action { width: 100%; height: 42px; border-radius: 4px; background: #1f2320; color: #fff; font-size: 12px; font-weight: 600; }
+.test-action.running { background: #c64339; }
 .mastery-button { width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 10px; border: 1px solid #3d9365; border-radius: 4px; background: #fff; color: #287247; font-size: 12px; font-weight: 600; }
 .mastery-button:hover { background: #edf6ef; }
 .mastery-button.mastered { border-color: #3d9365; background: #3d9365; color: #fff; cursor: default; }

@@ -164,6 +164,12 @@ let moving = false;
 let playing = false;
 let speed = 1;
 let playTimer = null;
+let studyMode = 'learn';
+let formulaRevealed = true;
+let testState = 'idle';
+let testStartedAt = 0;
+let testElapsed = 0;
+let testTimerId = null;
 const masteredStorageKey = 'cfop-3d-classroom-mastered-v1';
 const masteredCases = new Set(JSON.parse(localStorage.getItem(masteredStorageKey) || '[]'));
 
@@ -243,6 +249,7 @@ async function prepareCase() {
   for (const move of sequence) await executeMove(move, false);
   document.querySelector('#turnBadge strong').textContent = '准备';
   updateProgress();
+  updateModeUI();
 }
 
 function currentCase() {
@@ -266,6 +273,31 @@ function caseKey(item) {
 
 function persistMasteredCases() {
   localStorage.setItem(masteredStorageKey, JSON.stringify([...masteredCases]));
+}
+
+function formatTestTime(milliseconds) {
+  const minutes = Math.floor(milliseconds / 60000);
+  const seconds = Math.floor(milliseconds / 1000) % 60;
+  const tenths = Math.floor(milliseconds / 100) % 10;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${tenths}`;
+}
+
+function updateTestTimer() {
+  const elapsed = testState === 'running' ? performance.now() - testStartedAt : testElapsed;
+  document.getElementById('testTimer').textContent = formatTestTime(elapsed);
+}
+
+function stopTestClock() {
+  clearInterval(testTimerId);
+  testTimerId = null;
+}
+
+function resetModeState() {
+  stopTestClock();
+  testState = 'idle';
+  testElapsed = 0;
+  formulaRevealed = studyMode === 'learn';
+  updateTestTimer();
 }
 
 function pathCases(path) {
@@ -295,6 +327,7 @@ function renderPaths() {
     activePath = Number(button.dataset.path);
     activeStage = 0;
     activeCase = 0;
+    resetModeState();
     renderLesson();
     await prepareCase();
   }));
@@ -313,6 +346,7 @@ function renderStages() {
     if (moving) return;
     activeStage = Number(button.dataset.stage);
     activeCase = 0;
+    resetModeState();
     renderLesson();
     await prepareCase();
   }));
@@ -344,6 +378,61 @@ function renderLesson() {
   document.getElementById('algorithm').innerHTML = currentMoves().map((move, index) => `<span class="move-token" data-step="${index}">${move}</span>`).join('');
   updateMasteryButton();
   updateProgress();
+  updateModeUI();
+}
+
+function updateModeUI() {
+  const stage = visibleStages()[activeStage];
+  const item = currentCase();
+  const copy = stageCopy[stage.en];
+  const isPractice = studyMode === 'practice';
+  const isTest = studyMode === 'test';
+  const concealed = studyMode !== 'learn' && !formulaRevealed;
+
+  document.querySelectorAll('.mode-switch button').forEach(button => {
+    const active = button.dataset.mode === studyMode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
+
+  const algorithmBlock = document.querySelector('.algorithm-block');
+  algorithmBlock.classList.toggle('concealed', concealed);
+  document.querySelector('.algorithm-heading span:first-child').textContent = concealed ? '回忆公式' : studyMode === 'learn' ? '演示公式' : '参考公式';
+  document.getElementById('stepCount').textContent = concealed ? '隐藏' : `${step} / ${currentMoves().length}`;
+
+  const mask = document.getElementById('formulaMask');
+  mask.querySelector('strong').textContent = isTest && testState === 'running' ? '测试进行中' : isTest ? '等待测试' : '公式已隐藏';
+  mask.querySelector('span').textContent = isTest ? '完成计时后显示答案' : '先回忆动作，再查看答案';
+
+  document.getElementById('transport').hidden = isTest || concealed;
+  document.getElementById('formulaToggle').hidden = !isPractice;
+  document.getElementById('formulaToggle').textContent = formulaRevealed ? '重新隐藏公式' : '查看答案';
+  document.getElementById('formulaToggle').setAttribute('aria-pressed', String(formulaRevealed));
+  document.getElementById('testPanel').hidden = !isTest;
+  document.getElementById('casePicker').hidden = isTest;
+  document.getElementById('speedControl').hidden = isTest || concealed;
+  document.getElementById('keyboardNote').hidden = studyMode !== 'learn';
+  document.getElementById('markLearned').hidden = isTest && testState !== 'finished';
+
+  const testAction = document.getElementById('testAction');
+  testAction.classList.toggle('running', testState === 'running');
+  testAction.textContent = testState === 'running' ? '完成测试' : testState === 'finished' ? '下一题' : '开始测试';
+
+  if (isTest && testState !== 'finished') {
+    document.getElementById('stageNumber').textContent = '?';
+    document.getElementById('stageEnglish').textContent = `${stage.en} · 随机测试`;
+    document.getElementById('lessonTitle').textContent = '识别并完成';
+    document.getElementById('lessonGoal').textContent = testState === 'running'
+      ? '计时进行中。请在实体魔方上完成这个案例，完成后立即停止计时。'
+      : '点击开始后将随机抽取本阶段案例，并隐藏名称和公式。';
+    document.getElementById('focusText').textContent = '观察顶面与侧面特征，先识别案例，再回忆完整公式。';
+  } else {
+    document.getElementById('stageNumber').textContent = String(item.number).padStart(2, '0');
+    document.getElementById('stageEnglish').textContent = `${stage.en} · ${item.group}`;
+    document.getElementById('lessonTitle').textContent = stage.en === 'PLL' ? `PLL ${item.name}` : item.name;
+    document.getElementById('lessonGoal').textContent = copy.goal;
+    document.getElementById('focusText').textContent = copy.focus;
+  }
 }
 
 function updateMasteryButton() {
@@ -410,6 +499,60 @@ async function playback() {
   playTimer = setTimeout(playback, 240 / speed);
 }
 
+async function startTestRound() {
+  if (moving) return;
+  stopPlayback();
+  stopTestClock();
+  const cases = visibleStages()[activeStage].cases;
+  if (cases.length > 1) {
+    const offset = Math.floor(Math.random() * (cases.length - 1)) + 1;
+    activeCase = (activeCase + offset) % cases.length;
+  }
+  formulaRevealed = false;
+  testState = 'running';
+  testElapsed = 0;
+  renderLesson();
+  await prepareCase();
+  testStartedAt = performance.now();
+  updateTestTimer();
+  testTimerId = setInterval(updateTestTimer, 100);
+  document.querySelector('#turnBadge strong').textContent = '计时中';
+}
+
+function finishTestRound() {
+  if (testState !== 'running') return;
+  testElapsed = performance.now() - testStartedAt;
+  stopTestClock();
+  testState = 'finished';
+  formulaRevealed = true;
+  updateTestTimer();
+  renderLesson();
+  document.querySelector('#turnBadge strong').textContent = '测试完成';
+}
+
+document.querySelectorAll('.mode-switch button').forEach(button => button.addEventListener('click', async () => {
+  if (moving || button.dataset.mode === studyMode) return;
+  stopPlayback();
+  studyMode = button.dataset.mode;
+  resetModeState();
+  renderLesson();
+  await prepareCase();
+}));
+
+document.getElementById('formulaToggle').addEventListener('click', async () => {
+  if (moving) return;
+  stopPlayback();
+  formulaRevealed = !formulaRevealed;
+  if (!formulaRevealed) await prepareCase();
+  updateModeUI();
+});
+
+document.getElementById('testAction').addEventListener('click', async () => {
+  if (moving) return;
+  if (testState === 'running') finishTestRound();
+  else await startTestRound();
+});
+
 document.getElementById('play').addEventListener('click', async () => {
   if (playing) return stopPlayback();
   if (step >= currentMoves().length) await prepareCase();
@@ -428,10 +571,15 @@ document.getElementById('markLearned').addEventListener('click', () => {
   persistMasteredCases();
   refreshMasteryProgress();
 });
-document.getElementById('resetLesson').addEventListener('click', prepareCase);
+document.getElementById('resetLesson').addEventListener('click', async () => {
+  resetModeState();
+  renderLesson();
+  await prepareCase();
+});
 document.getElementById('caseSelect').addEventListener('change', async event => {
   if (moving) return;
   activeCase = Number(event.target.value);
+  resetModeState();
   renderLesson();
   await prepareCase();
 });
@@ -446,9 +594,10 @@ document.getElementById('speed').addEventListener('input', event => {
 });
 window.addEventListener('keydown', event => {
   if (event.target.matches('input, button')) return;
-  if (event.key === 'ArrowRight') nextStep();
-  if (event.key === 'ArrowLeft') previousStep();
-  if (event.code === 'Space') { event.preventDefault(); document.getElementById('play').click(); }
+  const playbackAvailable = studyMode === 'learn' || (studyMode === 'practice' && formulaRevealed);
+  if (event.key === 'ArrowRight' && playbackAvailable) nextStep();
+  if (event.key === 'ArrowLeft' && playbackAvailable) previousStep();
+  if (event.code === 'Space' && playbackAvailable) { event.preventDefault(); document.getElementById('play').click(); }
 });
 
 function resize() {
