@@ -164,8 +164,8 @@ let moving = false;
 let playing = false;
 let speed = 1;
 let playTimer = null;
-const learnedStorageKey = 'cfop-3d-classroom-learned-v1';
-const learnedCases = new Set(JSON.parse(localStorage.getItem(learnedStorageKey) || '[]'));
+const masteredStorageKey = 'cfop-3d-classroom-mastered-v1';
+const masteredCases = new Set(JSON.parse(localStorage.getItem(masteredStorageKey) || '[]'));
 
 function parseMove(notation) {
   const base = moveDefs[notation[0]];
@@ -264,8 +264,8 @@ function caseKey(item) {
   return `${item.category}:${item.name}`;
 }
 
-function persistLearnedCases() {
-  localStorage.setItem(learnedStorageKey, JSON.stringify([...learnedCases]));
+function persistMasteredCases() {
+  localStorage.setItem(masteredStorageKey, JSON.stringify([...masteredCases]));
 }
 
 function pathCases(path) {
@@ -277,7 +277,7 @@ function renderPaths() {
   const host = document.getElementById('pathList');
   host.innerHTML = learningPaths.map((path, index) => {
     const total = pathCases(path).length;
-    const completed = pathCases(path).filter(item => learnedCases.has(caseKey(item))).length;
+    const completed = pathCases(path).filter(item => masteredCases.has(caseKey(item))).length;
     return `<button class="path-button ${index === activePath ? 'active' : ''}" data-path="${index}" type="button">
       <span class="path-index">${path.number}</span>
       <span class="path-name"><strong>${path.title}</strong><span>${path.subtitle}</span></span>
@@ -287,8 +287,8 @@ function renderPaths() {
   document.getElementById('pathTitle').textContent = `${active.title}路径`;
   document.getElementById('pathDescription').textContent = active.description;
   const activeCases = pathCases(active);
-  const activeCompleted = activeCases.filter(item => learnedCases.has(caseKey(item))).length;
-  document.getElementById('pathProgress').innerHTML = `<span>已学习</span><strong>${activeCompleted} / ${activeCases.length}</strong><i><b style="width:${activeCases.length ? activeCompleted / activeCases.length * 100 : 0}%"></b></i>`;
+  const activeCompleted = activeCases.filter(item => masteredCases.has(caseKey(item))).length;
+  document.getElementById('pathProgress').innerHTML = `<span>已掌握</span><strong>${activeCompleted} / ${activeCases.length}</strong><i><b style="width:${activeCases.length ? activeCompleted / activeCases.length * 100 : 0}%"></b></i>`;
   host.querySelectorAll('button').forEach(button => button.addEventListener('click', async () => {
     if (moving || Number(button.dataset.path) === activePath) return;
     stopPlayback();
@@ -307,7 +307,7 @@ function renderStages() {
     <button class="stage-button ${index === activeStage ? 'active' : ''}" data-stage="${index}" type="button">
       <span class="stage-index">${String(index + 1).padStart(2, '0')}</span>
       <span class="stage-name"><strong>${stage.short}</strong><span>${stage.en}</span></span>
-      <span class="stage-count">${stage.cases.filter(item => learnedCases.has(caseKey(item))).length}/${stage.cases.length}</span>
+      <span class="stage-count">${stage.cases.filter(item => masteredCases.has(caseKey(item))).length}/${stage.cases.length}</span>
     </button>`).join('');
   host.querySelectorAll('button').forEach(button => button.addEventListener('click', async () => {
     if (moving) return;
@@ -323,7 +323,7 @@ function renderCasePicker() {
   const stage = visibleStages()[activeStage];
   picker.innerHTML = stage.cases.map((item, index) => {
     const prefix = stage.en === 'PLL' ? `PLL ${item.name}` : item.name;
-    return `<option value="${index}" ${index === activeCase ? 'selected' : ''}>${learnedCases.has(caseKey(item)) ? '✓ ' : ''}${prefix} · ${item.group}</option>`;
+    return `<option value="${index}" ${index === activeCase ? 'selected' : ''}>${masteredCases.has(caseKey(item)) ? '✓ 已掌握 · ' : ''}${prefix} · ${item.group}</option>`;
   }).join('');
 }
 
@@ -335,14 +335,32 @@ function renderLesson() {
   renderPaths();
   renderStages();
   renderCasePicker();
-  document.getElementById('stageProgress').textContent = `${stage.cases.filter(item => learnedCases.has(caseKey(item))).length} / ${stage.cases.length}`;
+  document.getElementById('stageProgress').textContent = `${stage.cases.filter(item => masteredCases.has(caseKey(item))).length} / ${stage.cases.length}`;
   document.getElementById('stageNumber').textContent = String(item.number).padStart(2, '0');
   document.getElementById('stageEnglish').textContent = `${stage.en} · ${item.group}`;
   document.getElementById('lessonTitle').textContent = title;
   document.getElementById('lessonGoal').textContent = copy.goal;
   document.getElementById('focusText').textContent = copy.focus;
   document.getElementById('algorithm').innerHTML = currentMoves().map((move, index) => `<span class="move-token" data-step="${index}">${move}</span>`).join('');
+  updateMasteryButton();
   updateProgress();
+}
+
+function updateMasteryButton() {
+  const button = document.getElementById('markLearned');
+  const mastered = masteredCases.has(caseKey(currentCase()));
+  button.classList.toggle('mastered', mastered);
+  button.setAttribute('aria-pressed', String(mastered));
+  button.querySelector('span').textContent = mastered ? '已掌握' : '我已学会';
+}
+
+function refreshMasteryProgress() {
+  const stage = visibleStages()[activeStage];
+  renderPaths();
+  renderStages();
+  renderCasePicker();
+  document.getElementById('stageProgress').textContent = `${stage.cases.filter(item => masteredCases.has(caseKey(item))).length} / ${stage.cases.length}`;
+  updateMasteryButton();
 }
 
 function updateProgress() {
@@ -355,17 +373,7 @@ function updateProgress() {
   document.getElementById('previous').disabled = step === 0 || moving;
   document.getElementById('next').disabled = step === algorithm.length || moving;
   if (step === algorithm.length) {
-    document.querySelector('#turnBadge strong').textContent = '完成';
-    const key = caseKey(currentCase());
-    if (!learnedCases.has(key)) {
-      learnedCases.add(key);
-      persistLearnedCases();
-      renderPaths();
-      renderStages();
-      renderCasePicker();
-      const stage = visibleStages()[activeStage];
-      document.getElementById('stageProgress').textContent = `${stage.cases.filter(item => learnedCases.has(caseKey(item))).length} / ${stage.cases.length}`;
-    }
+    document.querySelector('#turnBadge strong').textContent = '完成演示';
   }
 }
 
@@ -413,6 +421,13 @@ document.getElementById('play').addEventListener('click', async () => {
 });
 document.getElementById('next').addEventListener('click', () => { stopPlayback(); nextStep(); });
 document.getElementById('previous').addEventListener('click', previousStep);
+document.getElementById('markLearned').addEventListener('click', () => {
+  const key = caseKey(currentCase());
+  if (masteredCases.has(key)) return;
+  masteredCases.add(key);
+  persistMasteredCases();
+  refreshMasteryProgress();
+});
 document.getElementById('resetLesson').addEventListener('click', prepareCase);
 document.getElementById('caseSelect').addEventListener('change', async event => {
   if (moving) return;
