@@ -34,6 +34,22 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
 .lesson-panel { border-right: 1px solid #d7d9d4; display: flex; flex-direction: column; padding: 28px 16px 20px; }
 .panel-heading { display: flex; flex-direction: column; gap: 6px; padding: 0 10px 18px; }
 .panel-heading strong { font-size: 17px; }
+.path-description { color: #747a74; font-size: 11px; line-height: 1.55; }
+.path-list { display: grid; gap: 5px; padding-bottom: 14px; }
+.path-button { width: 100%; display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px; padding: 8px 10px; background: transparent; border-radius: 4px; text-align: left; }
+.path-button:hover { background: #eceee9; }
+.path-button.active { background: #e5e9e3; }
+.path-index { color: #858b85; font-size: 10px; font-variant-numeric: tabular-nums; }
+.path-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.path-name strong { font-size: 12px; font-weight: 600; }
+.path-name span { color: #7b817b; font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.path-count { color: #5e655e; font-size: 10px; font-variant-numeric: tabular-nums; }
+.stage-heading { display: flex; justify-content: space-between; align-items: center; padding: 13px 10px 8px; border-top: 1px solid #dedfdb; color: #737973; font-size: 10px; }
+.stage-heading span:last-child { color: #3d9365; font-weight: 700; font-variant-numeric: tabular-nums; }
+.path-progress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 9px; margin: 0 10px 16px; color: #737973; font-size: 10px; }
+.path-progress strong { color: #272c28; font-size: 12px; font-variant-numeric: tabular-nums; }
+.path-progress i { grid-column: 1 / -1; display: block; height: 4px; overflow: hidden; background: #d9ddd7; border-radius: 2px; }
+.path-progress b { display: block; height: 100%; background: #3d9365; border-radius: inherit; transition: width .25s ease; }
 .eyebrow { color: #818780; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
 .stage-list { display: grid; gap: 6px; }
 .stage-button { width: 100%; display: grid; grid-template-columns: 34px 1fr 26px; align-items: center; gap: 10px; padding: 12px 10px; text-align: left; border-radius: 4px; background: transparent; }
@@ -102,7 +118,11 @@ kbd { min-width: 20px; padding: 3px 5px; text-align: center; border: 1px solid #
   .app-shell { grid-template-rows: 64px auto; }
   .workspace { display: grid; grid-template-columns: 1fr; grid-template-rows: auto minmax(420px, 58vh) auto; }
   .lesson-panel { border-right: 0; border-bottom: 1px solid #d7d9d4; padding: 14px; }
-  .panel-heading, .notation-key { display: none; }
+  .panel-heading, .notation-key, .path-progress, .stage-heading { display: none; }
+  .path-list { grid-template-columns: repeat(4, 1fr); padding: 0 0 7px; gap: 5px; }
+  .path-button { grid-template-columns: 1fr; justify-items: center; gap: 2px; padding: 7px 2px; text-align: center; }
+  .path-index, .path-name span, .path-count { display: none; }
+  .path-name strong { font-size: 10px; }
   .stage-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
   .stage-button { grid-template-columns: 1fr; justify-items: center; gap: 5px; padding: 8px 4px; text-align: center; }
   .stage-index { width: 25px; height: 25px; }

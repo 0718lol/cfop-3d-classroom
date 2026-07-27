@@ -29,8 +29,12 @@
         <aside class="lesson-panel" aria-label="CFOP 课程阶段">
           <div class="panel-heading">
             <span class="eyebrow">学习路径</span>
-            <strong>CFOP 四阶段</strong>
+            <strong id="pathTitle">起步路径</strong>
+            <span id="pathDescription" class="path-description"></span>
           </div>
+          <nav id="pathList" class="path-list" aria-label="学习路径"></nav>
+          <div id="pathProgress" class="path-progress" aria-live="polite"></div>
+          <div class="stage-heading"><span>本层内容</span><span id="stageProgress"></span></div>
           <nav id="stageList" class="stage-list"></nav>
           <div class="notation-key">
             <span class="eyebrow">公式图例</span>

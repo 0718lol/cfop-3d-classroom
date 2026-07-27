@@ -7,11 +7,34 @@ const crossCase = {
   setup: "F R U R' U' F'", algorithm: "F U R U' R' F'"
 };
 
-const stages = [
+const allStages = [
   { id: 'cross', short: '十字', en: 'CROSS', cases: [crossCase] },
   { id: 'f2l', short: '前两层', en: 'F2L', cases: algorithms.filter(item => item.category === 'F2L') },
   { id: 'oll', short: '顶面定向', en: 'OLL', cases: algorithms.filter(item => item.category === 'OLL') },
   { id: 'pll', short: '顶层排列', en: 'PLL', cases: algorithms.filter(item => item.category === 'PLL') }
+];
+
+const learningPaths = [
+  {
+    id: 'starter', number: '01', title: '起步', subtitle: '2-Look 最小闭环',
+    description: '先建立最后一层的完整解题闭环：十字、基础 OLL 和最常用 PLL。',
+    includes: item => item.category === 'CROSS' || (item.category === 'OLL' && item.number >= 21 && item.number <= 28) || (item.category === 'PLL' && ['Aa', 'E', 'Ua', 'Ub', 'H', 'Z'].includes(item.name))
+  },
+  {
+    id: 'accelerate', number: '02', title: '加速', subtitle: '高频 F2L + 全 PLL',
+    description: '先把常见 F2L 结构和全部 PLL 建成肌肉记忆，明显减少停顿。',
+    includes: item => item.category === 'CROSS' || (item.category === 'F2L' && Number(item.name.split(' ')[1]) <= 16) || item.category === 'PLL'
+  },
+  {
+    id: 'advanced', number: '03', title: '进阶', subtitle: '完整最后一层',
+    description: '集中完成 57 OLL 与 21 PLL，训练识别和持 cube 方向。',
+    includes: item => item.category === 'CROSS' || item.category === 'OLL' || item.category === 'PLL'
+  },
+  {
+    id: 'mastery', number: '04', title: '精通', subtitle: '完整 CFOP 案例库',
+    description: '开放全部 119 个案例，系统补齐 F2L 与最后一层的薄弱项。',
+    includes: () => true
+  }
 ];
 
 const stageCopy = {
@@ -133,6 +156,7 @@ const moveDefs = {
   z: { axis: 'z', angle: -quarter, select: () => true }
 };
 
+let activePath = 0;
 let activeStage = 0;
 let activeCase = 0;
 let step = 0;
@@ -140,6 +164,8 @@ let moving = false;
 let playing = false;
 let speed = 1;
 let playTimer = null;
+const learnedStorageKey = 'cfop-3d-classroom-learned-v1';
+const learnedCases = new Set(JSON.parse(localStorage.getItem(learnedStorageKey) || '[]'));
 
 function parseMove(notation) {
   const base = moveDefs[notation[0]];
@@ -220,20 +246,68 @@ async function prepareCase() {
 }
 
 function currentCase() {
-  return stages[activeStage].cases[activeCase];
+  return visibleStages()[activeStage].cases[activeCase];
 }
 
 function currentMoves() {
   return movesOf(currentCase().algorithm);
 }
 
+function visibleStages() {
+  const path = learningPaths[activePath];
+  return allStages
+    .map(stage => ({ ...stage, cases: stage.cases.filter(path.includes) }))
+    .filter(stage => stage.cases.length);
+}
+
+function caseKey(item) {
+  return `${item.category}:${item.name}`;
+}
+
+function persistLearnedCases() {
+  localStorage.setItem(learnedStorageKey, JSON.stringify([...learnedCases]));
+}
+
+function pathCases(path) {
+  return allStages.flatMap(stage => stage.cases).filter(path.includes);
+}
+
+function renderPaths() {
+  const active = learningPaths[activePath];
+  const host = document.getElementById('pathList');
+  host.innerHTML = learningPaths.map((path, index) => {
+    const total = pathCases(path).length;
+    const completed = pathCases(path).filter(item => learnedCases.has(caseKey(item))).length;
+    return `<button class="path-button ${index === activePath ? 'active' : ''}" data-path="${index}" type="button">
+      <span class="path-index">${path.number}</span>
+      <span class="path-name"><strong>${path.title}</strong><span>${path.subtitle}</span></span>
+      <span class="path-count">${completed}/${total}</span>
+    </button>`;
+  }).join('');
+  document.getElementById('pathTitle').textContent = `${active.title}路径`;
+  document.getElementById('pathDescription').textContent = active.description;
+  const activeCases = pathCases(active);
+  const activeCompleted = activeCases.filter(item => learnedCases.has(caseKey(item))).length;
+  document.getElementById('pathProgress').innerHTML = `<span>已学习</span><strong>${activeCompleted} / ${activeCases.length}</strong><i><b style="width:${activeCases.length ? activeCompleted / activeCases.length * 100 : 0}%"></b></i>`;
+  host.querySelectorAll('button').forEach(button => button.addEventListener('click', async () => {
+    if (moving || Number(button.dataset.path) === activePath) return;
+    stopPlayback();
+    activePath = Number(button.dataset.path);
+    activeStage = 0;
+    activeCase = 0;
+    renderLesson();
+    await prepareCase();
+  }));
+}
+
 function renderStages() {
+  const stages = visibleStages();
   const host = document.getElementById('stageList');
   host.innerHTML = stages.map((stage, index) => `
     <button class="stage-button ${index === activeStage ? 'active' : ''}" data-stage="${index}" type="button">
       <span class="stage-index">${String(index + 1).padStart(2, '0')}</span>
       <span class="stage-name"><strong>${stage.short}</strong><span>${stage.en}</span></span>
-      <span class="stage-count">${stage.cases.length}</span>
+      <span class="stage-count">${stage.cases.filter(item => learnedCases.has(caseKey(item))).length}/${stage.cases.length}</span>
     </button>`).join('');
   host.querySelectorAll('button').forEach(button => button.addEventListener('click', async () => {
     if (moving) return;
@@ -246,19 +320,22 @@ function renderStages() {
 
 function renderCasePicker() {
   const picker = document.getElementById('caseSelect');
-  picker.innerHTML = stages[activeStage].cases.map((item, index) => {
-    const prefix = stages[activeStage].en === 'PLL' ? `PLL ${item.name}` : item.name;
-    return `<option value="${index}" ${index === activeCase ? 'selected' : ''}>${prefix} · ${item.group}</option>`;
+  const stage = visibleStages()[activeStage];
+  picker.innerHTML = stage.cases.map((item, index) => {
+    const prefix = stage.en === 'PLL' ? `PLL ${item.name}` : item.name;
+    return `<option value="${index}" ${index === activeCase ? 'selected' : ''}>${learnedCases.has(caseKey(item)) ? '✓ ' : ''}${prefix} · ${item.group}</option>`;
   }).join('');
 }
 
 function renderLesson() {
-  const stage = stages[activeStage];
+  const stage = visibleStages()[activeStage];
   const item = currentCase();
   const copy = stageCopy[stage.en];
   const title = stage.en === 'PLL' ? `PLL ${item.name}` : item.name;
+  renderPaths();
   renderStages();
   renderCasePicker();
+  document.getElementById('stageProgress').textContent = `${stage.cases.filter(item => learnedCases.has(caseKey(item))).length} / ${stage.cases.length}`;
   document.getElementById('stageNumber').textContent = String(item.number).padStart(2, '0');
   document.getElementById('stageEnglish').textContent = `${stage.en} · ${item.group}`;
   document.getElementById('lessonTitle').textContent = title;
@@ -277,7 +354,19 @@ function updateProgress() {
   });
   document.getElementById('previous').disabled = step === 0 || moving;
   document.getElementById('next').disabled = step === algorithm.length || moving;
-  if (step === algorithm.length) document.querySelector('#turnBadge strong').textContent = '完成';
+  if (step === algorithm.length) {
+    document.querySelector('#turnBadge strong').textContent = '完成';
+    const key = caseKey(currentCase());
+    if (!learnedCases.has(key)) {
+      learnedCases.add(key);
+      persistLearnedCases();
+      renderPaths();
+      renderStages();
+      renderCasePicker();
+      const stage = visibleStages()[activeStage];
+      document.getElementById('stageProgress').textContent = `${stage.cases.filter(item => learnedCases.has(caseKey(item))).length} / ${stage.cases.length}`;
+    }
+  }
 }
 
 async function nextStep() {
