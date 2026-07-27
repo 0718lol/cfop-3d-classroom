@@ -3,8 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { algorithms } from './algorithms.js';
 
 const crossCase = {
-  category: 'CROSS', number: 1, name: '底层十字示例', group: '理解式教学',
-  setup: "F R U R' U' F'", algorithm: "F U R U' R' F'"
+  category: 'CROSS', number: 1, name: '底层十字回位', group: '按中心色回位',
+  setup: "R U F", algorithm: "F' U' R'"
 };
 
 const allStages = [
@@ -39,8 +39,8 @@ const learningPaths = [
 
 const stageCopy = {
   CROSS: {
-    goal: '先让底面四个棱块归位，并让侧面颜色与中心块对齐。十字以观察和规划为主，不需要背固定公式。',
-    focus: '盯住目标棱块，观察它的朝向、落点和对应侧面中心。'
+    goal: '按底面颜色和侧面中心色，把四个目标棱块逐一回位。十字以观察和规划为主，不需要背固定公式。',
+    focus: '先看目标棱块的侧面颜色对应哪个中心块，再决定怎样让它回到十字。'
   },
   F2L: {
     goal: '识别角块与棱块的相对位置，先配对，再把这一对插入正确槽位。',
