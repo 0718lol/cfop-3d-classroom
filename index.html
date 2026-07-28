@@ -47,6 +47,13 @@
               <div><code>z</code><span>按 F 方向整体转动</span></div>
             </div>
           </details>
+          <section class="review-board" id="reviewBoard" aria-labelledby="reviewTitle">
+            <div class="review-heading">
+              <strong id="reviewTitle">待复习</strong>
+              <span id="reviewCount">0</span>
+            </div>
+            <div class="review-list" id="reviewList"></div>
+          </section>
           <div class="stage-heading"><span>本层内容</span><span id="stageProgress"></span></div>
           <nav id="stageList" class="stage-list"></nav>
         </aside>
@@ -114,7 +121,7 @@
           </div>
           <button class="mastery-button" id="markLearned" type="button" aria-pressed="false">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
-            <span>我已学会</span>
+            <span>标记已掌握</span>
           </button>
           <label class="speed-control" id="speedControl" for="speed">
             <span>转动速度</span><strong id="speedValue">1.0×</strong>

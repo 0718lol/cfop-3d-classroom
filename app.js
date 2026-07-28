@@ -312,6 +312,34 @@ function pathCases(path) {
   return allStages.flatMap(stage => stage.cases).filter(path.includes);
 }
 
+function reviewCases() {
+  return allStages.flatMap(stage => stage.cases).filter(item => testResults[caseKey(item)]?.needsReview);
+}
+
+function renderReviewBoard() {
+  const items = reviewCases();
+  document.getElementById('reviewCount').textContent = items.length;
+  const host = document.getElementById('reviewList');
+  host.innerHTML = items.length
+    ? items.map((item, index) => `<button class="review-item" data-review-index="${index}" type="button"><span>${item.category}</span><strong>${item.name}</strong></button>`).join('')
+    : '<p class="review-empty">暂无待复习公式</p>';
+
+  host.querySelectorAll('button').forEach(button => button.addEventListener('click', async () => {
+    if (moving) return;
+    const item = items[Number(button.dataset.reviewIndex)];
+    stopPlayback();
+    const currentPath = learningPaths[activePath];
+    if (!currentPath.includes(item)) activePath = learningPaths.findIndex(path => path.includes(item));
+    const stages = visibleStages();
+    activeStage = stages.findIndex(stage => stage.en === item.category);
+    activeCase = stages[activeStage].cases.findIndex(candidate => caseKey(candidate) === caseKey(item));
+    studyMode = 'practice';
+    resetModeState();
+    renderLesson();
+    await prepareCase();
+  }));
+}
+
 function renderPaths() {
   const active = learningPaths[activePath];
   const host = document.getElementById('pathList');
@@ -329,6 +357,7 @@ function renderPaths() {
   const notationGuide = document.getElementById('notationGuide');
   notationGuide.hidden = active.id !== 'starter';
   if (notationGuide.hidden) notationGuide.open = false;
+  renderReviewBoard();
   const activeCases = pathCases(active);
   const activeCompleted = activeCases.filter(item => masteredCases.has(caseKey(item))).length;
   document.getElementById('pathProgress').innerHTML = `<span>已掌握</span><strong>${activeCompleted} / ${activeCases.length}</strong><i><b style="width:${activeCases.length ? activeCompleted / activeCases.length * 100 : 0}%"></b></i>`;
@@ -425,7 +454,7 @@ function updateModeUI() {
   document.getElementById('casePicker').hidden = isTest;
   document.getElementById('speedControl').hidden = isTest || concealed;
   document.getElementById('keyboardNote').hidden = studyMode !== 'learn';
-  document.getElementById('markLearned').hidden = isPractice || (isTest && !['finished', 'reviewed'].includes(testState));
+  document.getElementById('markLearned').hidden = !isPractice;
 
   const testAction = document.getElementById('testAction');
   testAction.classList.toggle('running', testState === 'running');
@@ -462,7 +491,7 @@ function updateMasteryButton() {
   const mastered = masteredCases.has(caseKey(currentCase()));
   button.classList.toggle('mastered', mastered);
   button.setAttribute('aria-pressed', String(mastered));
-  button.querySelector('span').textContent = mastered ? '已掌握' : '我已学会';
+  button.querySelector('span').textContent = mastered ? '已掌握' : '标记已掌握';
 }
 
 function refreshMasteryProgress() {
@@ -570,6 +599,7 @@ function recordTestResult(result) {
   persistTestResults();
   testResult = result;
   testState = 'reviewed';
+  renderReviewBoard();
   renderCasePicker();
   updateModeUI();
   document.querySelector('#turnBadge strong').textContent = success ? '成功' : '待复习';
@@ -613,8 +643,8 @@ document.getElementById('next').addEventListener('click', () => { stopPlayback()
 document.getElementById('previous').addEventListener('click', previousStep);
 document.getElementById('markLearned').addEventListener('click', () => {
   const key = caseKey(currentCase());
-  if (masteredCases.has(key)) return;
-  masteredCases.add(key);
+  if (masteredCases.has(key)) masteredCases.delete(key);
+  else masteredCases.add(key);
   persistMasteredCases();
   refreshMasteryProgress();
 });
