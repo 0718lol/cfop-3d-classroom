@@ -435,6 +435,7 @@ function updateModeUI() {
   const stage = visibleStages()[activeStage];
   const item = currentCase();
   const copy = stageCopy[stage.en];
+  const title = stage.en === 'PLL' ? `PLL ${item.name}` : item.name;
   const isPractice = studyMode === 'practice';
   const isTest = studyMode === 'test';
   const concealed = studyMode !== 'learn' && !formulaRevealed;
@@ -467,7 +468,7 @@ function updateModeUI() {
   const testAction = document.getElementById('testAction');
   testAction.classList.toggle('running', testState === 'running');
   testAction.hidden = isTest && testState === 'finished';
-  testAction.textContent = testState === 'running' ? '完成测试' : testState === 'reviewed' ? '下一题' : '开始测试';
+  testAction.textContent = testState === 'running' ? '完成测试' : testState === 'reviewed' ? '再次测试' : '开始测试';
 
   document.getElementById('testResultActions').hidden = !isTest || testState !== 'finished';
   const feedback = document.getElementById('testFeedback');
@@ -478,17 +479,17 @@ function updateModeUI() {
     : `已加入待复习 · 本次用时 ${formatTestTime(testElapsed)}`;
 
   if (isTest && ['idle', 'running'].includes(testState)) {
-    document.getElementById('stageNumber').textContent = '?';
-    document.getElementById('stageEnglish').textContent = `${stage.en} · 随机测试`;
-    document.getElementById('lessonTitle').textContent = '识别并完成';
+    document.getElementById('stageNumber').textContent = String(item.number).padStart(2, '0');
+    document.getElementById('stageEnglish').textContent = `${stage.en} · 当前公式测试`;
+    document.getElementById('lessonTitle').textContent = title;
     document.getElementById('lessonGoal').textContent = testState === 'running'
-      ? '计时进行中。请在实体魔方上完成这个案例，完成后立即停止计时。'
-      : '点击开始后将随机抽取本阶段案例，并隐藏名称和公式。';
-    document.getElementById('focusText').textContent = '观察顶面与侧面特征，先识别案例，再回忆完整公式。';
+      ? '计时进行中。请在实体魔方上完成当前公式，完成后立即停止计时。'
+      : '点击开始，测试当前选择的公式；计时期间公式步骤会保持隐藏。';
+    document.getElementById('focusText').textContent = copy.focus;
   } else {
     document.getElementById('stageNumber').textContent = String(item.number).padStart(2, '0');
     document.getElementById('stageEnglish').textContent = `${stage.en} · ${item.group}`;
-    document.getElementById('lessonTitle').textContent = stage.en === 'PLL' ? `PLL ${item.name}` : item.name;
+    document.getElementById('lessonTitle').textContent = title;
     document.getElementById('lessonGoal').textContent = copy.goal;
     document.getElementById('focusText').textContent = copy.focus;
   }
@@ -562,11 +563,6 @@ async function startTestRound() {
   if (moving) return;
   stopPlayback();
   stopTestClock();
-  const cases = visibleStages()[activeStage].cases;
-  if (cases.length > 1) {
-    const offset = Math.floor(Math.random() * (cases.length - 1)) + 1;
-    activeCase = (activeCase + offset) % cases.length;
-  }
   formulaRevealed = false;
   testState = 'running';
   testResult = null;
