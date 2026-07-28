@@ -176,7 +176,9 @@ let pathExamQueue = [];
 let pathExamIndex = 0;
 let pathExamSuccesses = 0;
 let pathExamElapsed = 0;
+let testTimedOut = false;
 const pathExamQuestionLimit = 10;
+const pathExamTimeLimit = 15000;
 const masteredStorageKey = 'cfop-3d-classroom-mastered-v1';
 const masteredCases = new Set(JSON.parse(localStorage.getItem(masteredStorageKey) || '[]'));
 const testResultsStorageKey = 'cfop-3d-classroom-test-results-v1';
@@ -297,8 +299,20 @@ function formatTestTime(milliseconds) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${tenths}`;
 }
 
+function formatCountdown(milliseconds) {
+  return formatTestTime(Math.ceil(Math.max(0, milliseconds) / 100) * 100);
+}
+
 function updateTestTimer() {
   const elapsed = testState === 'running' ? performance.now() - testStartedAt : testElapsed;
+  if (pathExamActive) {
+    const remaining = testState === 'idle'
+      ? pathExamTimeLimit
+      : Math.max(0, pathExamTimeLimit - elapsed);
+    document.getElementById('testTimer').textContent = formatCountdown(remaining);
+    if (testState === 'running' && elapsed >= pathExamTimeLimit) finishTestRound(true);
+    return;
+  }
   document.getElementById('testTimer').textContent = formatTestTime(elapsed);
 }
 
@@ -317,6 +331,7 @@ function resetModeState() {
   pathExamIndex = 0;
   pathExamSuccesses = 0;
   pathExamElapsed = 0;
+  testTimedOut = false;
   formulaRevealed = studyMode === 'learn';
   updateTestTimer();
 }
@@ -356,7 +371,7 @@ function renderPathExamEntry() {
   button.classList.toggle('passed', !pathExamActive && result?.bestScore >= 80);
   document.getElementById('pathExamTitle').textContent = `${path.title}结业测验`;
   document.getElementById('pathExamStatus').textContent = unlocked
-    ? `${Math.min(pathExamQuestionLimit, items.length)} 道随机题`
+    ? `${Math.min(pathExamQuestionLimit, items.length)} 道随机题 · 每题 15 秒`
     : `${completed}/${items.length} 完成后解锁`;
   document.getElementById('pathExamScore').textContent = result ? `最好 ${result.bestScore}%` : unlocked ? '可测验' : '锁定';
 }
@@ -372,6 +387,7 @@ async function startPathExam() {
   pathExamQueue = shuffled(items).slice(0, Math.min(pathExamQuestionLimit, items.length));
   selectCaseItem(pathExamQueue[0]);
   formulaRevealed = false;
+  updateTestTimer();
   renderLesson();
   await prepareCase();
 }
@@ -525,6 +541,7 @@ function updateModeUI() {
   document.getElementById('formulaToggle').textContent = formulaRevealed ? '重新隐藏公式' : '查看答案';
   document.getElementById('formulaToggle').setAttribute('aria-pressed', String(formulaRevealed));
   document.getElementById('testPanel').hidden = !isTest;
+  document.getElementById('testTimeLabel').textContent = pathExamActive ? '本题剩余' : '测试计时';
   document.getElementById('casePicker').hidden = isTest;
   document.getElementById('speedControl').hidden = isTest || concealed;
   document.getElementById('keyboardNote').hidden = studyMode !== 'learn';
@@ -553,7 +570,9 @@ function updateModeUI() {
   feedback.classList.toggle('review', pathExamActive && testState === 'exam-complete' ? pathExamSuccesses < pathExamQueue.length : testResult === 'review');
   feedback.textContent = pathExamActive && testState === 'exam-complete'
     ? `测验完成 · 成功 ${pathExamSuccesses} · 待复习 ${pathExamQueue.length - pathExamSuccesses} · 总用时 ${formatTestTime(pathExamElapsed)}`
-    : testResult === 'success'
+    : testTimedOut
+      ? '已超时 · 自动加入待复习'
+      : testResult === 'success'
       ? `已记录成功 · 用时 ${formatTestTime(testElapsed)}`
       : `已加入待复习 · 本次用时 ${formatTestTime(testElapsed)}`;
 
@@ -666,6 +685,7 @@ async function startTestRound() {
   testState = 'running';
   testResult = null;
   testElapsed = 0;
+  testTimedOut = false;
   renderLesson();
   await prepareCase();
   testStartedAt = performance.now();
@@ -674,15 +694,23 @@ async function startTestRound() {
   document.querySelector('#turnBadge strong').textContent = '计时中';
 }
 
-function finishTestRound() {
+function finishTestRound(timedOut = false) {
   if (testState !== 'running') return;
-  testElapsed = performance.now() - testStartedAt;
+  testElapsed = timedOut && pathExamActive
+    ? pathExamTimeLimit
+    : performance.now() - testStartedAt;
+  testTimedOut = timedOut && pathExamActive;
   stopTestClock();
   testState = 'finished';
   formulaRevealed = true;
   updateTestTimer();
   renderLesson();
-  document.querySelector('#turnBadge strong').textContent = '测试完成';
+  if (testTimedOut) {
+    recordTestResult('review');
+    document.querySelector('#turnBadge strong').textContent = '超时';
+  } else {
+    document.querySelector('#turnBadge strong').textContent = '测试完成';
+  }
 }
 
 function recordTestResult(result) {
