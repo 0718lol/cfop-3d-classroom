@@ -167,11 +167,14 @@ let playTimer = null;
 let studyMode = 'learn';
 let formulaRevealed = true;
 let testState = 'idle';
+let testResult = null;
 let testStartedAt = 0;
 let testElapsed = 0;
 let testTimerId = null;
 const masteredStorageKey = 'cfop-3d-classroom-mastered-v1';
 const masteredCases = new Set(JSON.parse(localStorage.getItem(masteredStorageKey) || '[]'));
+const testResultsStorageKey = 'cfop-3d-classroom-test-results-v1';
+const testResults = JSON.parse(localStorage.getItem(testResultsStorageKey) || '{}');
 
 function parseMove(notation) {
   const base = moveDefs[notation[0]];
@@ -275,6 +278,10 @@ function persistMasteredCases() {
   localStorage.setItem(masteredStorageKey, JSON.stringify([...masteredCases]));
 }
 
+function persistTestResults() {
+  localStorage.setItem(testResultsStorageKey, JSON.stringify(testResults));
+}
+
 function formatTestTime(milliseconds) {
   const minutes = Math.floor(milliseconds / 60000);
   const seconds = Math.floor(milliseconds / 1000) % 60;
@@ -295,6 +302,7 @@ function stopTestClock() {
 function resetModeState() {
   stopTestClock();
   testState = 'idle';
+  testResult = null;
   testElapsed = 0;
   formulaRevealed = studyMode === 'learn';
   updateTestTimer();
@@ -357,7 +365,9 @@ function renderCasePicker() {
   const stage = visibleStages()[activeStage];
   picker.innerHTML = stage.cases.map((item, index) => {
     const prefix = stage.en === 'PLL' ? `PLL ${item.name}` : item.name;
-    return `<option value="${index}" ${index === activeCase ? 'selected' : ''}>${masteredCases.has(caseKey(item)) ? '✓ 已掌握 · ' : ''}${prefix} · ${item.group}</option>`;
+    const key = caseKey(item);
+    const status = masteredCases.has(key) ? '✓ 已掌握 · ' : testResults[key]?.needsReview ? '↻ 待复习 · ' : '';
+    return `<option value="${index}" ${index === activeCase ? 'selected' : ''}>${status}${prefix} · ${item.group}</option>`;
   }).join('');
 }
 
@@ -412,13 +422,22 @@ function updateModeUI() {
   document.getElementById('casePicker').hidden = isTest;
   document.getElementById('speedControl').hidden = isTest || concealed;
   document.getElementById('keyboardNote').hidden = studyMode !== 'learn';
-  document.getElementById('markLearned').hidden = isTest && testState !== 'finished';
+  document.getElementById('markLearned').hidden = isTest && !['finished', 'reviewed'].includes(testState);
 
   const testAction = document.getElementById('testAction');
   testAction.classList.toggle('running', testState === 'running');
-  testAction.textContent = testState === 'running' ? '完成测试' : testState === 'finished' ? '下一题' : '开始测试';
+  testAction.hidden = isTest && testState === 'finished';
+  testAction.textContent = testState === 'running' ? '完成测试' : testState === 'reviewed' ? '下一题' : '开始测试';
 
-  if (isTest && testState !== 'finished') {
+  document.getElementById('testResultActions').hidden = !isTest || testState !== 'finished';
+  const feedback = document.getElementById('testFeedback');
+  feedback.hidden = !isTest || testState !== 'reviewed';
+  feedback.classList.toggle('review', testResult === 'review');
+  feedback.textContent = testResult === 'success'
+    ? `已记录成功 · 用时 ${formatTestTime(testElapsed)}`
+    : `已加入待复习 · 本次用时 ${formatTestTime(testElapsed)}`;
+
+  if (isTest && ['idle', 'running'].includes(testState)) {
     document.getElementById('stageNumber').textContent = '?';
     document.getElementById('stageEnglish').textContent = `${stage.en} · 随机测试`;
     document.getElementById('lessonTitle').textContent = '识别并完成';
@@ -510,6 +529,7 @@ async function startTestRound() {
   }
   formulaRevealed = false;
   testState = 'running';
+  testResult = null;
   testElapsed = 0;
   renderLesson();
   await prepareCase();
@@ -528,6 +548,28 @@ function finishTestRound() {
   updateTestTimer();
   renderLesson();
   document.querySelector('#turnBadge strong').textContent = '测试完成';
+}
+
+function recordTestResult(result) {
+  if (testState !== 'finished') return;
+  const key = caseKey(currentCase());
+  const previous = testResults[key] || { attempts: 0, successes: 0, bestTime: null, needsReview: false };
+  const success = result === 'success';
+  testResults[key] = {
+    attempts: previous.attempts + 1,
+    successes: previous.successes + (success ? 1 : 0),
+    bestTime: success && (previous.bestTime === null || testElapsed < previous.bestTime) ? Math.round(testElapsed) : previous.bestTime,
+    lastTime: Math.round(testElapsed),
+    lastResult: result,
+    lastTestedAt: new Date().toISOString(),
+    needsReview: !success
+  };
+  persistTestResults();
+  testResult = result;
+  testState = 'reviewed';
+  renderCasePicker();
+  updateModeUI();
+  document.querySelector('#turnBadge strong').textContent = success ? '成功' : '待复习';
 }
 
 document.querySelectorAll('.mode-switch button').forEach(button => button.addEventListener('click', async () => {
@@ -552,6 +594,8 @@ document.getElementById('testAction').addEventListener('click', async () => {
   if (testState === 'running') finishTestRound();
   else await startTestRound();
 });
+document.getElementById('testSuccess').addEventListener('click', () => recordTestResult('success'));
+document.getElementById('testReview').addEventListener('click', () => recordTestResult('review'));
 
 document.getElementById('play').addEventListener('click', async () => {
   if (playing) return stopPlayback();

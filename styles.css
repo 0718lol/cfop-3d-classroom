@@ -120,6 +120,14 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
 .test-time strong { color: #242924; font: 700 22px ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
 .test-action { width: 100%; height: 42px; border-radius: 4px; background: #1f2320; color: #fff; font-size: 12px; font-weight: 600; }
 .test-action.running { background: #c64339; }
+.test-result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.test-result-actions button { min-height: 42px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.test-success { background: #3d9365; color: #fff; }
+.test-success:hover { background: #338258; }
+.test-review { border: 1px solid #c8aaa5; background: #fff; color: #a34238; }
+.test-review:hover { background: #f8eeec; }
+.test-feedback { margin: 0; padding: 9px 11px; border-left: 3px solid #3d9365; background: #edf3ed; color: #4e564f; font-size: 10px; line-height: 1.5; }
+.test-feedback.review { border-left-color: #c15a4f; background: #f6edeb; }
 .mastery-button { width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 10px; border: 1px solid #3d9365; border-radius: 4px; background: #fff; color: #287247; font-size: 12px; font-weight: 600; }
 .mastery-button:hover { background: #edf6ef; }
 .mastery-button.mastered { border-color: #3d9365; background: #3d9365; color: #fff; cursor: default; }
