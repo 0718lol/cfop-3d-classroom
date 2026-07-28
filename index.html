@@ -56,6 +56,11 @@
           </details>
           <div class="stage-heading"><span>本层内容</span><span id="stageProgress"></span></div>
           <nav id="stageList" class="stage-list"></nav>
+          <button class="path-exam-button" id="pathExamButton" type="button" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8M9 2h6v4H9zM6 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1"/><path d="m8 14 2.5 2.5L16 11"/></svg>
+            <span><strong id="pathExamTitle">起步结业测验</strong><small id="pathExamStatus">完成课程后解锁</small></span>
+            <em id="pathExamScore">锁定</em>
+          </button>
         </aside>
 
         <section class="cube-stage" aria-label="三维魔方演示">
@@ -98,6 +103,10 @@
           </div>
           <button class="formula-toggle" id="formulaToggle" type="button" hidden>查看答案</button>
           <div class="test-panel" id="testPanel" hidden>
+            <div class="exam-session" id="pathExamSession" hidden>
+              <div><span id="pathExamSessionTitle">起步结业测验</span><strong id="pathExamQuestion">1 / 10</strong></div>
+              <i><b id="pathExamBar"></b></i>
+            </div>
             <div class="test-time"><span>测试计时</span><strong id="testTimer">00:00.0</strong></div>
             <button class="test-action" id="testAction" type="button">开始测试</button>
             <div class="test-result-actions" id="testResultActions" hidden>

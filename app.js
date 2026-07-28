@@ -171,10 +171,18 @@ let testResult = null;
 let testStartedAt = 0;
 let testElapsed = 0;
 let testTimerId = null;
+let pathExamActive = false;
+let pathExamQueue = [];
+let pathExamIndex = 0;
+let pathExamSuccesses = 0;
+let pathExamElapsed = 0;
+const pathExamQuestionLimit = 10;
 const masteredStorageKey = 'cfop-3d-classroom-mastered-v1';
 const masteredCases = new Set(JSON.parse(localStorage.getItem(masteredStorageKey) || '[]'));
 const testResultsStorageKey = 'cfop-3d-classroom-test-results-v1';
 const testResults = JSON.parse(localStorage.getItem(testResultsStorageKey) || '{}');
+const pathExamResultsStorageKey = 'cfop-3d-classroom-path-exams-v1';
+const pathExamResults = JSON.parse(localStorage.getItem(pathExamResultsStorageKey) || '{}');
 
 function parseMove(notation) {
   const base = moveDefs[notation[0]];
@@ -304,12 +312,68 @@ function resetModeState() {
   testState = 'idle';
   testResult = null;
   testElapsed = 0;
+  pathExamActive = false;
+  pathExamQueue = [];
+  pathExamIndex = 0;
+  pathExamSuccesses = 0;
+  pathExamElapsed = 0;
   formulaRevealed = studyMode === 'learn';
   updateTestTimer();
 }
 
 function pathCases(path) {
   return allStages.flatMap(stage => stage.cases).filter(path.includes);
+}
+
+function shuffled(items) {
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index--) {
+    const target = Math.floor(Math.random() * (index + 1));
+    [result[index], result[target]] = [result[target], result[index]];
+  }
+  return result;
+}
+
+function selectCaseItem(item) {
+  const stages = visibleStages();
+  activeStage = stages.findIndex(stage => stage.en === item.category);
+  activeCase = stages[activeStage].cases.findIndex(candidate => caseKey(candidate) === caseKey(item));
+}
+
+function persistPathExamResults() {
+  localStorage.setItem(pathExamResultsStorageKey, JSON.stringify(pathExamResults));
+}
+
+function renderPathExamEntry() {
+  const path = learningPaths[activePath];
+  const items = pathCases(path);
+  const completed = items.filter(item => masteredCases.has(caseKey(item))).length;
+  const unlocked = completed === items.length;
+  const result = pathExamResults[path.id];
+  const button = document.getElementById('pathExamButton');
+  button.disabled = !unlocked;
+  button.classList.toggle('active', pathExamActive);
+  button.classList.toggle('passed', !pathExamActive && result?.bestScore >= 80);
+  document.getElementById('pathExamTitle').textContent = `${path.title}结业测验`;
+  document.getElementById('pathExamStatus').textContent = unlocked
+    ? `${Math.min(pathExamQuestionLimit, items.length)} 道随机题`
+    : `${completed}/${items.length} 完成后解锁`;
+  document.getElementById('pathExamScore').textContent = result ? `最好 ${result.bestScore}%` : unlocked ? '可测验' : '锁定';
+}
+
+async function startPathExam() {
+  const path = learningPaths[activePath];
+  const items = pathCases(path);
+  if (moving || items.some(item => !masteredCases.has(caseKey(item)))) return;
+  stopPlayback();
+  resetModeState();
+  studyMode = 'test';
+  pathExamActive = true;
+  pathExamQueue = shuffled(items).slice(0, Math.min(pathExamQuestionLimit, items.length));
+  selectCaseItem(pathExamQueue[0]);
+  formulaRevealed = false;
+  renderLesson();
+  await prepareCase();
 }
 
 function reviewCases() {
@@ -398,6 +462,7 @@ function renderStages() {
     renderLesson();
     await prepareCase();
   }));
+  renderPathExamEntry();
 }
 
 function renderCasePicker() {
@@ -452,8 +517,8 @@ function updateModeUI() {
   document.getElementById('stepCount').textContent = concealed ? '隐藏' : `${step} / ${currentMoves().length}`;
 
   const mask = document.getElementById('formulaMask');
-  mask.querySelector('strong').textContent = isTest && testState === 'running' ? '测试进行中' : isTest ? '等待测试' : '公式已隐藏';
-  mask.querySelector('span').textContent = isTest ? '完成计时后显示答案' : '先回忆动作，再查看答案';
+  mask.querySelector('strong').textContent = isTest && testState === 'running' ? '测试进行中' : pathExamActive ? '等待结业测验' : isTest ? '等待测试' : '公式已隐藏';
+  mask.querySelector('span').textContent = isTest ? `${pathExamActive ? '完成本题' : '完成计时'}后显示答案` : '先回忆动作，再查看答案';
 
   document.getElementById('transport').hidden = isTest || concealed;
   document.getElementById('formulaToggle').hidden = !isPractice;
@@ -465,20 +530,50 @@ function updateModeUI() {
   document.getElementById('keyboardNote').hidden = studyMode !== 'learn';
   document.getElementById('markLearned').hidden = !isPractice;
 
+  const examSession = document.getElementById('pathExamSession');
+  examSession.hidden = !pathExamActive;
+  if (pathExamActive) {
+    const path = learningPaths[activePath];
+    const answered = pathExamIndex + (['reviewed', 'exam-complete'].includes(testState) ? 1 : 0);
+    document.getElementById('pathExamSessionTitle').textContent = `${path.title}结业测验`;
+    document.getElementById('pathExamQuestion').textContent = `${Math.min(pathExamIndex + 1, pathExamQueue.length)} / ${pathExamQueue.length}`;
+    document.getElementById('pathExamBar').style.width = `${pathExamQueue.length ? answered / pathExamQueue.length * 100 : 0}%`;
+  }
+
   const testAction = document.getElementById('testAction');
   testAction.classList.toggle('running', testState === 'running');
   testAction.hidden = isTest && testState === 'finished';
-  testAction.textContent = testState === 'running' ? '完成测试' : testState === 'reviewed' ? '再次测试' : '开始测试';
+  testAction.textContent = pathExamActive
+    ? testState === 'running' ? '完成本题' : testState === 'reviewed' ? '下一题' : testState === 'exam-complete' ? '重新测验' : '开始结业测验'
+    : testState === 'running' ? '完成测试' : testState === 'reviewed' ? '再次测试' : '开始测试';
 
   document.getElementById('testResultActions').hidden = !isTest || testState !== 'finished';
   const feedback = document.getElementById('testFeedback');
-  feedback.hidden = !isTest || testState !== 'reviewed';
-  feedback.classList.toggle('review', testResult === 'review');
-  feedback.textContent = testResult === 'success'
-    ? `已记录成功 · 用时 ${formatTestTime(testElapsed)}`
-    : `已加入待复习 · 本次用时 ${formatTestTime(testElapsed)}`;
+  feedback.hidden = !isTest || (pathExamActive ? !['reviewed', 'exam-complete'].includes(testState) : testState !== 'reviewed');
+  feedback.classList.toggle('review', pathExamActive && testState === 'exam-complete' ? pathExamSuccesses < pathExamQueue.length : testResult === 'review');
+  feedback.textContent = pathExamActive && testState === 'exam-complete'
+    ? `测验完成 · 成功 ${pathExamSuccesses} · 待复习 ${pathExamQueue.length - pathExamSuccesses} · 总用时 ${formatTestTime(pathExamElapsed)}`
+    : testResult === 'success'
+      ? `已记录成功 · 用时 ${formatTestTime(testElapsed)}`
+      : `已加入待复习 · 本次用时 ${formatTestTime(testElapsed)}`;
 
-  if (isTest && ['idle', 'running'].includes(testState)) {
+  if (pathExamActive && ['idle', 'running'].includes(testState)) {
+    const path = learningPaths[activePath];
+    document.getElementById('stageNumber').textContent = String(pathExamIndex + 1).padStart(2, '0');
+    document.getElementById('stageEnglish').textContent = `${path.title} · 结业测验`;
+    document.getElementById('lessonTitle').textContent = `第 ${pathExamIndex + 1} 题 · 识别并完成`;
+    document.getElementById('lessonGoal').textContent = testState === 'running'
+      ? '计时进行中。请识别当前案例并在实体魔方上完成，完成后立即停止计时。'
+      : `本次从${path.title}路径随机抽取 ${pathExamQueue.length} 道，逐题记录成功或需要复习。`;
+    document.getElementById('focusText').textContent = '先观察魔方状态并独立判断案例，再回忆对应公式。';
+  } else if (pathExamActive && testState === 'exam-complete') {
+    const path = learningPaths[activePath];
+    document.getElementById('stageNumber').textContent = '✓';
+    document.getElementById('stageEnglish').textContent = `${path.title} · 结业测验`;
+    document.getElementById('lessonTitle').textContent = '测验完成';
+    document.getElementById('lessonGoal').textContent = `共 ${pathExamQueue.length} 题，成功 ${pathExamSuccesses} 题，需要复习 ${pathExamQueue.length - pathExamSuccesses} 题。`;
+    document.getElementById('focusText').textContent = pathExamSuccesses === pathExamQueue.length ? '本次全部成功，可以继续下一条学习路径。' : '待复习公式已经加入左侧列表，复习后可以重新测验。';
+  } else if (isTest && ['idle', 'running'].includes(testState)) {
     document.getElementById('stageNumber').textContent = String(item.number).padStart(2, '0');
     document.getElementById('stageEnglish').textContent = `${stage.en} · 当前公式测试`;
     document.getElementById('lessonTitle').textContent = title;
@@ -563,6 +658,10 @@ async function startTestRound() {
   if (moving) return;
   stopPlayback();
   stopTestClock();
+  if (pathExamActive && testState === 'reviewed') {
+    pathExamIndex++;
+    selectCaseItem(pathExamQueue[pathExamIndex]);
+  }
   formulaRevealed = false;
   testState = 'running';
   testResult = null;
@@ -602,7 +701,27 @@ function recordTestResult(result) {
   };
   persistTestResults();
   testResult = result;
-  testState = 'reviewed';
+  if (pathExamActive) {
+    pathExamSuccesses += success ? 1 : 0;
+    pathExamElapsed += testElapsed;
+    const complete = pathExamIndex === pathExamQueue.length - 1;
+    testState = complete ? 'exam-complete' : 'reviewed';
+    if (complete) {
+      const path = learningPaths[activePath];
+      const score = Math.round(pathExamSuccesses / pathExamQueue.length * 100);
+      const previousExam = pathExamResults[path.id] || { attempts: 0, bestScore: 0 };
+      pathExamResults[path.id] = {
+        attempts: previousExam.attempts + 1,
+        bestScore: Math.max(previousExam.bestScore, score),
+        lastScore: score,
+        lastCompletedAt: new Date().toISOString()
+      };
+      persistPathExamResults();
+    }
+    renderPathExamEntry();
+  } else {
+    testState = 'reviewed';
+  }
   renderReviewBoard();
   renderCasePicker();
   updateModeUI();
@@ -629,10 +748,12 @@ document.getElementById('formulaToggle').addEventListener('click', async () => {
 document.getElementById('testAction').addEventListener('click', async () => {
   if (moving) return;
   if (testState === 'running') finishTestRound();
+  else if (pathExamActive && testState === 'exam-complete') await startPathExam();
   else await startTestRound();
 });
 document.getElementById('testSuccess').addEventListener('click', () => recordTestResult('success'));
 document.getElementById('testReview').addEventListener('click', () => recordTestResult('review'));
+document.getElementById('pathExamButton').addEventListener('click', startPathExam);
 
 document.getElementById('play').addEventListener('click', async () => {
   if (playing) return stopPlayback();

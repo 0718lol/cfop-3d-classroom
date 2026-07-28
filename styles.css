@@ -64,6 +64,16 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
 .stage-button.active .stage-name span { color: #aeb4af; }
 .stage-count { font-size: 10px; color: #949a94; text-align: right; }
 .stage-button.active .stage-count { color: #c0c5c1; }
+.path-exam-button { width: 100%; display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 9px; margin-top: 9px; padding: 10px; border: 1px solid #3d9365; border-radius: 4px; background: #3d9365; color: #fff; text-align: left; }
+.path-exam-button:hover { background: #338258; }
+.path-exam-button:disabled { border-color: #d4d7d1; background: #eceee9; color: #8b918b; cursor: default; }
+.path-exam-button.active { border-color: #1f2320; background: #1f2320; }
+.path-exam-button.passed { background: #fff; color: #287247; }
+.path-exam-button svg { width: 20px; height: 20px; }
+.path-exam-button > span { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.path-exam-button strong { overflow: hidden; font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.path-exam-button small { color: currentColor; font-size: 8px; opacity: .75; }
+.path-exam-button em { font-size: 9px; font-style: normal; font-weight: 700; white-space: nowrap; }
 .notation-guide { margin: 0 0 8px; border-top: 1px solid #dedfdb; border-bottom: 1px solid #dedfdb; }
 .notation-guide summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; cursor: pointer; list-style: none; }
 .notation-guide summary::-webkit-details-marker { display: none; }
@@ -142,6 +152,11 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
 .formula-toggle { width: 100%; height: 40px; margin-top: 12px; border: 1px solid #c9cdc7; border-radius: 4px; background: #fff; color: #303631; font-size: 12px; font-weight: 600; }
 .formula-toggle:hover { background: #ecefe9; }
 .test-panel { display: grid; gap: 10px; margin-top: 14px; }
+.exam-session { display: grid; gap: 7px; padding: 10px 12px; border: 1px solid #cfd2cc; background: #fff; }
+.exam-session div { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #666d67; font-size: 10px; }
+.exam-session strong { color: #252a26; font-size: 11px; font-variant-numeric: tabular-nums; }
+.exam-session i { display: block; height: 4px; overflow: hidden; border-radius: 2px; background: #dde0da; }
+.exam-session b { display: block; width: 0; height: 100%; border-radius: inherit; background: #3d9365; transition: width .2s ease; }
 .test-time { display: flex; justify-content: space-between; align-items: baseline; padding: 11px 12px; border-top: 1px solid #d7dad4; border-bottom: 1px solid #d7dad4; color: #737973; font-size: 10px; }
 .test-time strong { color: #242924; font: 700 22px ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
 .test-action { width: 100%; height: 42px; border-radius: 4px; background: #1f2320; color: #fff; font-size: 12px; font-weight: 600; }
@@ -184,6 +199,7 @@ kbd { min-width: 20px; padding: 3px 5px; text-align: center; border: 1px solid #
   .stage-index { width: 25px; height: 25px; }
   .stage-name span, .stage-count { display: none; }
   .stage-name strong { font-size: 11px; }
+  .path-exam-button { margin-top: 7px; }
   .coach-panel { border-left: 0; border-top: 1px solid #d7d9d4; overflow: visible; }
   .keyboard-note { display: none; }
 }
