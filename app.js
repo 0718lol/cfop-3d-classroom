@@ -652,7 +652,13 @@ document.getElementById('previous').addEventListener('click', previousStep);
 document.getElementById('markLearned').addEventListener('click', () => {
   const key = caseKey(currentCase());
   if (masteredCases.has(key)) masteredCases.delete(key);
-  else masteredCases.add(key);
+  else {
+    masteredCases.add(key);
+    if (testResults[key]?.needsReview) {
+      testResults[key] = { ...testResults[key], needsReview: false };
+      persistTestResults();
+    }
+  }
   persistMasteredCases();
   refreshMasteryProgress();
 });
