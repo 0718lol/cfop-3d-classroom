@@ -326,6 +326,9 @@ function renderPaths() {
   }).join('');
   document.getElementById('pathTitle').textContent = `${active.title}路径`;
   document.getElementById('pathDescription').textContent = active.description;
+  const notationGuide = document.getElementById('notationGuide');
+  notationGuide.hidden = active.id !== 'starter';
+  if (notationGuide.hidden) notationGuide.open = false;
   const activeCases = pathCases(active);
   const activeCompleted = activeCases.filter(item => masteredCases.has(caseKey(item))).length;
   document.getElementById('pathProgress').innerHTML = `<span>已掌握</span><strong>${activeCompleted} / ${activeCases.length}</strong><i><b style="width:${activeCases.length ? activeCompleted / activeCases.length * 100 : 0}%"></b></i>`;
@@ -422,7 +425,7 @@ function updateModeUI() {
   document.getElementById('casePicker').hidden = isTest;
   document.getElementById('speedControl').hidden = isTest || concealed;
   document.getElementById('keyboardNote').hidden = studyMode !== 'learn';
-  document.getElementById('markLearned').hidden = isTest && !['finished', 'reviewed'].includes(testState);
+  document.getElementById('markLearned').hidden = isPractice || (isTest && !['finished', 'reviewed'].includes(testState));
 
   const testAction = document.getElementById('testAction');
   testAction.classList.toggle('running', testState === 'running');
