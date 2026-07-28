@@ -320,9 +320,17 @@ function renderReviewBoard() {
   const items = reviewCases();
   document.getElementById('reviewCount').textContent = items.length;
   const host = document.getElementById('reviewList');
-  host.innerHTML = items.length
-    ? items.map((item, index) => `<button class="review-item" data-review-index="${index}" type="button"><span>${item.category}</span><strong>${item.name}</strong></button>`).join('')
-    : '<p class="review-empty">暂无待复习公式</p>';
+  const indexedItems = items.map((item, index) => ({ item, index }));
+  host.innerHTML = allStages.map(stage => {
+    const groupItems = indexedItems.filter(entry => entry.item.category === stage.en);
+    const list = groupItems.length
+      ? groupItems.map(({ item, index }) => `<button class="review-item" data-review-index="${index}" type="button"><span>${item.category}</span><strong>${item.name}</strong></button>`).join('')
+      : '<p class="review-empty">暂无待复习公式</p>';
+    return `<details class="review-group">
+      <summary><span class="review-group-name"><b>${stage.short}</b><small>${stage.en}</small></span><em>${groupItems.length}</em></summary>
+      <div class="review-group-list">${list}</div>
+    </details>`;
+  }).join('');
 
   host.querySelectorAll('button').forEach(button => button.addEventListener('click', async () => {
     if (moving) return;
