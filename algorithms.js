@@ -1,21 +1,22 @@
-// Fixed-color Cross cases are selected from CubeZone's published 8-move study.
-// https://www.cubezone.be/worst_cases_fixed_cross_ftm.txt
+// Difficulty-layered fixed-color Cross drills. Mastery cases include examples
+// from CubeZone's published fixed-color Cross study.
+// https://www.cubezone.be/crossstudy.html
 export const crossCases = [
-  { id: 'cross-1', category: 'CROSS', number: 1, name: '十字 01', group: '8 步综合案例', setup: "F' D L D2 F' B' L R", algorithm: "R' L' B F D2 L' D' F" },
-  { id: 'cross-2', category: 'CROSS', number: 2, name: '十字 02', group: '8 步综合案例', setup: "B2 D' F2 L' D2 F L' R", algorithm: "R' L F' D2 L F2 D B2" },
-  { id: 'cross-3', category: 'CROSS', number: 3, name: '十字 03', group: '8 步综合案例', setup: "L D R L D2 F' B' R", algorithm: "R' B F D2 L' R' D' L'" },
-  { id: 'cross-4', category: 'CROSS', number: 4, name: '十字 04', group: '8 步综合案例', setup: "F' R B' L U2 B' U' R", algorithm: "R' U B U2 L' B R' F" },
-  { id: 'cross-5', category: 'CROSS', number: 5, name: '十字 05', group: '8 步综合案例', setup: "D R L D2 F' B' L R", algorithm: "R' L' B F D2 L' R' D'" },
-  { id: 'cross-6', category: 'CROSS', number: 6, name: '十字 06', group: '8 步综合案例', setup: "D R L D2 F' B' L R'", algorithm: "R L' B F D2 L' R' D'" },
-  { id: 'cross-7', category: 'CROSS', number: 7, name: '十字 07', group: '8 步综合案例', setup: "F2 D2 F' L' R U' R L'", algorithm: "L R' U R' L F D2 F2" },
-  { id: 'cross-8', category: 'CROSS', number: 8, name: '十字 08', group: '8 步综合案例', setup: "D' L' F R' D' B R2 L'", algorithm: "L R2 B' D R F' L D" },
-  { id: 'cross-9', category: 'CROSS', number: 9, name: '十字 09', group: '8 步综合案例', setup: "R D F' R L F' B' L'", algorithm: "L B F L' R' F D' R'" },
-  { id: 'cross-10', category: 'CROSS', number: 10, name: '十字 10', group: '8 步综合案例', setup: "D' L' F R' D' B R2 L", algorithm: "L' R2 B' D R F' L D" },
-  { id: 'cross-11', category: 'CROSS', number: 11, name: '十字 11', group: '8 步综合案例', setup: "F D2 L' F' R U' R D", algorithm: "D' R' U R' F L D2 F'" },
-  { id: 'cross-12', category: 'CROSS', number: 12, name: '十字 12', group: '8 步综合案例', setup: "F' D2 R F' U2 R U' L2", algorithm: "L2 U R' U2 F R' D2 F" },
-  { id: 'cross-13', category: 'CROSS', number: 13, name: '十字 13', group: '8 步综合案例', setup: "D' L' R' D2 F B R' L", algorithm: "L' R B' F' D2 R L D" },
-  { id: 'cross-14', category: 'CROSS', number: 14, name: '十字 14', group: '8 步综合案例', setup: "D R F' L D B' L2 R'", algorithm: "R L2 B D' L' F R' D'" },
-  { id: 'cross-15', category: 'CROSS', number: 15, name: '十字 15', group: '8 步综合案例', setup: "F' L D' R F' U B' R", algorithm: "R' B U' F R' D L' F" }
+  { id: 'cross-1', category: 'CROSS', number: 1, name: '十字 01', group: '起步 · 单棱回位', difficulty: 1, setup: 'U F', algorithm: "F'" },
+  { id: 'cross-2', category: 'CROSS', number: 2, name: '十字 02', group: '起步 · 对棱协调', difficulty: 1, setup: "U' R L", algorithm: "L' R'" },
+  { id: 'cross-3', category: 'CROSS', number: 3, name: '十字 03', group: '起步 · 邻棱协调', difficulty: 1, setup: 'U2 R F', algorithm: "F' R'" },
+  { id: 'cross-4', category: 'CROSS', number: 4, name: '十字 04', group: '起步 · 三棱顺序', difficulty: 1, setup: "U R L F", algorithm: "F' L' R'" },
+  { id: 'cross-5', category: 'CROSS', number: 5, name: '十字 05', group: '加速 · 三棱顺序', difficulty: 2, setup: "U' R L B", algorithm: "B' L' R'" },
+  { id: 'cross-6', category: 'CROSS', number: 6, name: '十字 06', group: '加速 · 底层调整', difficulty: 2, setup: 'U2 R L D F', algorithm: "F' D' L' R'" },
+  { id: 'cross-7', category: 'CROSS', number: 7, name: '十字 07', group: '加速 · 方向修正', difficulty: 2, setup: "U R L D B'", algorithm: "B D' L' R'" },
+  { id: 'cross-8', category: 'CROSS', number: 8, name: '十字 08', group: '加速 · 连续规划', difficulty: 2, setup: "U' R L D R F'", algorithm: "F R' D' L' R'" },
+  { id: 'cross-9', category: 'CROSS', number: 9, name: '十字 09', group: '进阶 · 连续规划', difficulty: 3, setup: 'U2 R L D R B', algorithm: "B' R' D' L' R'" },
+  { id: 'cross-10', category: 'CROSS', number: 10, name: '十字 10', group: '进阶 · 六步案例', difficulty: 3, setup: "U R L D R L F'", algorithm: "F L' R' D' L' R'" },
+  { id: 'cross-11', category: 'CROSS', number: 11, name: '十字 11', group: '进阶 · 六步案例', difficulty: 3, setup: "U' R L D R L' F", algorithm: "F' L R' D' L' R'" },
+  { id: 'cross-12', category: 'CROSS', number: 12, name: '十字 12', group: '进阶 · 七步案例', difficulty: 3, setup: "U2 R L D R L F' B'", algorithm: "B F L' R' D' L' R'" },
+  { id: 'cross-13', category: 'CROSS', number: 13, name: '十字 13', group: '精通 · 七步案例', difficulty: 4, setup: "U R L D R L U2 F'", algorithm: "F U2 L' R' D' L' R'" },
+  { id: 'cross-14', category: 'CROSS', number: 14, name: '十字 14', group: '精通 · 八步案例', difficulty: 4, setup: "F' D L D2 F' B' L R", algorithm: "R' L' B F D2 L' D' F" },
+  { id: 'cross-15', category: 'CROSS', number: 15, name: '十字 15', group: '精通 · 八步案例', difficulty: 4, setup: "B2 D' F2 L' D2 F L' R", algorithm: "R' L F' D2 L F2 D B2" }
 ];
 
 // Generated from SpeedCubeDB public algorithm sheets.

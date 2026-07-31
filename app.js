@@ -13,17 +13,17 @@ const learningPaths = [
   {
     id: 'starter', number: '01', title: '起步', subtitle: '2-Look 最小闭环',
     description: '先建立最后一层的完整解题闭环：十字、基础 OLL 和最常用 PLL。',
-    includes: item => item.category === 'CROSS' || (item.category === 'OLL' && item.number >= 21 && item.number <= 28) || (item.category === 'PLL' && ['Aa', 'E', 'Ua', 'Ub', 'H', 'Z'].includes(item.name))
+    includes: item => (item.category === 'CROSS' && item.difficulty <= 1) || (item.category === 'OLL' && item.number >= 21 && item.number <= 28) || (item.category === 'PLL' && ['Aa', 'E', 'Ua', 'Ub', 'H', 'Z'].includes(item.name))
   },
   {
     id: 'accelerate', number: '02', title: '加速', subtitle: '高频 F2L + 全 PLL',
     description: '先把常见 F2L 结构和全部 PLL 建成肌肉记忆，明显减少停顿。',
-    includes: item => item.category === 'CROSS' || (item.category === 'F2L' && Number(item.name.split(' ')[1]) <= 16) || item.category === 'PLL'
+    includes: item => (item.category === 'CROSS' && item.difficulty <= 2) || (item.category === 'F2L' && Number(item.name.split(' ')[1]) <= 16) || item.category === 'PLL'
   },
   {
     id: 'advanced', number: '03', title: '进阶', subtitle: '完整最后一层',
     description: '集中完成 57 OLL 与 21 PLL，训练识别和持 cube 方向。',
-    includes: item => item.category === 'CROSS' || item.category === 'OLL' || item.category === 'PLL'
+    includes: item => (item.category === 'CROSS' && item.difficulty <= 3) || item.category === 'OLL' || item.category === 'PLL'
   },
   {
     id: 'mastery', number: '04', title: '精通', subtitle: '完整 CFOP 案例库',
