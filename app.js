@@ -1,14 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { algorithms } from './algorithms.js';
-
-const crossCase = {
-  category: 'CROSS', number: 1, name: '底层十字回位', group: '按中心色回位',
-  setup: "R U F", algorithm: "F' U' R'"
-};
+import { algorithms, crossCases } from './algorithms.js';
 
 const allStages = [
-  { id: 'cross', short: '十字', en: 'CROSS', cases: [crossCase] },
+  { id: 'cross', short: '十字', en: 'CROSS', cases: crossCases },
   { id: 'f2l', short: '前两层', en: 'F2L', cases: algorithms.filter(item => item.category === 'F2L') },
   { id: 'oll', short: '顶面定向', en: 'OLL', cases: algorithms.filter(item => item.category === 'OLL') },
   { id: 'pll', short: '顶层排列', en: 'PLL', cases: algorithms.filter(item => item.category === 'PLL') }
@@ -32,15 +27,15 @@ const learningPaths = [
   },
   {
     id: 'mastery', number: '04', title: '精通', subtitle: '完整 CFOP 案例库',
-    description: '开放全部 119 个案例，系统补齐 F2L 与最后一层的薄弱项。',
+    description: '开放 15 个十字训练与全部 119 个 CFOP 公式，系统补齐每个薄弱项。',
     includes: () => true
   }
 ];
 
 const stageCopy = {
   CROSS: {
-    goal: '按底面颜色和侧面中心色，把四个目标棱块逐一回位。十字以观察和规划为主，不需要背固定公式。',
-    focus: '先看目标棱块的侧面颜色对应哪个中心块，再决定怎样让它回到十字。'
+    goal: '通过固定白底十字案例练习观察、规划和八步内复原，理解每一步怎样同时处理多个棱块。',
+    focus: '白色中心保持在底面，先规划四个白色棱块的顺序，再观察侧色是否与中心对齐。'
   },
   F2L: {
     goal: '识别角块与棱块的相对位置，先配对，再把这一对插入正确槽位。',
