@@ -180,6 +180,78 @@ const testResultsStorageKey = 'cfop-3d-classroom-test-results-v1';
 const testResults = JSON.parse(localStorage.getItem(testResultsStorageKey) || '{}');
 const pathExamResultsStorageKey = 'cfop-3d-classroom-path-exams-v1';
 const pathExamResults = JSON.parse(localStorage.getItem(pathExamResultsStorageKey) || '{}');
+let currentAccount = null;
+let syncTimer = null;
+
+function localProfile() {
+  return { mastered: [...masteredCases], testResults, pathExamResults };
+}
+
+function applyProfile(profile) {
+  masteredCases.clear();
+  (Array.isArray(profile?.mastered) ? profile.mastered : []).forEach(key => masteredCases.add(key));
+  Object.keys(testResults).forEach(key => delete testResults[key]);
+  Object.assign(testResults, profile?.testResults || {});
+  Object.keys(pathExamResults).forEach(key => delete pathExamResults[key]);
+  Object.assign(pathExamResults, profile?.pathExamResults || {});
+  localStorage.setItem(masteredStorageKey, JSON.stringify([...masteredCases]));
+  localStorage.setItem(testResultsStorageKey, JSON.stringify(testResults));
+  localStorage.setItem(pathExamResultsStorageKey, JSON.stringify(pathExamResults));
+}
+
+function syncProfile() {
+  if (!currentAccount) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    try {
+      await fetch('/api/account', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: currentAccount, profile: localProfile() }) });
+    } catch (error) { console.warn('Profile sync unavailable', error); }
+  }, 250);
+}
+
+function setAccountLabel(name) { document.getElementById('accountName').textContent = name || '游客'; }
+
+function showAuthScreen() {
+  document.getElementById('authScreen').hidden = false;
+}
+
+function hideAuthScreen() {
+  document.getElementById('authScreen').hidden = true;
+}
+
+async function enterAccount(name, migrate = false) {
+  const response = await fetch('/api/account', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, migrate, profile: localProfile() }) });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || '无法接入档案');
+  currentAccount = result.name;
+  applyProfile(result.profile);
+  setAccountLabel(currentAccount);
+  hideAuthScreen();
+  renderLesson();
+  await prepareCase();
+}
+
+function enterGuest() {
+  currentAccount = null;
+  setAccountLabel('游客');
+  hideAuthScreen();
+}
+
+document.getElementById('authForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const input = document.getElementById('authName');
+  const error = document.getElementById('authError');
+  error.hidden = true;
+  try { await enterAccount(input.value.trim(), input.value.trim() === '王安畅'); }
+  catch (reason) { error.textContent = reason.message; error.hidden = false; }
+});
+document.getElementById('guestEntry').addEventListener('click', enterGuest);
+document.getElementById('logoutAccount').addEventListener('click', () => {
+  currentAccount = null;
+  document.getElementById('authName').value = '';
+  document.getElementById('authError').hidden = true;
+  showAuthScreen();
+});
 
 function parseMove(notation) {
   const base = moveDefs[notation[0]];
@@ -281,10 +353,12 @@ function caseKey(item) {
 
 function persistMasteredCases() {
   localStorage.setItem(masteredStorageKey, JSON.stringify([...masteredCases]));
+  syncProfile();
 }
 
 function persistTestResults() {
   localStorage.setItem(testResultsStorageKey, JSON.stringify(testResults));
+  syncProfile();
 }
 
 function formatTestTime(milliseconds) {
@@ -352,6 +426,7 @@ function selectCaseItem(item) {
 
 function persistPathExamResults() {
   localStorage.setItem(pathExamResultsStorageKey, JSON.stringify(pathExamResults));
+  syncProfile();
 }
 
 function renderPathExamEntry() {
