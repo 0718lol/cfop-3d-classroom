@@ -1,7 +1,10 @@
 {
   "name": "cfop-classroom",
   "private": true,
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node scripts/verify-algorithms.mjs"
+  },
   "dependencies": {
     "firebase-admin": "^13.6.0"
   }

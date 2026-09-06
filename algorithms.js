@@ -990,8 +990,8 @@ export const algorithms = [
     "number": 10,
     "name": "Ja",
     "group": "Adj Swap",
-    "setup": "L' R' U2 R U R' U2 L U' R y'",
-    "algorithm": "y2 x R2 F R F' R U2 r' U r U2 x'"
+    "setup": "x U2 r' U' r U2 R' F R' F' R2 x'",
+    "algorithm": "x R2 F R F' R U2 r' U r U2 x'"
   },
   {
     "id": "jb",
@@ -1054,7 +1054,7 @@ export const algorithms = [
     "name": "Ua",
     "group": "EPLL",
     "setup": "M2 U' M' U2 M U' M2",
-    "algorithm": "y2 M2 U M U2 M' U M2"
+    "algorithm": "M2 U M' U2 M U M2"
   },
   {
     "id": "ub",
@@ -1063,7 +1063,7 @@ export const algorithms = [
     "name": "Ub",
     "group": "EPLL",
     "setup": "M2 U M' U2 M U M2",
-    "algorithm": "y2 M2 U' M U2 M' U' M2"
+    "algorithm": "M2 U' M' U2 M U' M2"
   },
   {
     "id": "v",
@@ -1089,7 +1089,7 @@ export const algorithms = [
     "number": 21,
     "name": "Z",
     "group": "EPLL",
-    "setup": "M U2 M2 U2 M U' M2 U' M2",
-    "algorithm": "M' U' M2 U' M2 U' M' U2 M2"
+    "setup": "U2 M U2 M2 U2 M U' M2 U' M2",
+    "algorithm": "M2 U M2 U M' U2 M2 U2 M' U2"
   }
 ];

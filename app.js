@@ -175,11 +175,19 @@ let testTimedOut = false;
 const pathExamQuestionLimit = 10;
 const pathExamTimeLimit = 15000;
 const masteredStorageKey = 'cfop-3d-classroom-mastered-v1';
-const masteredCases = new Set(JSON.parse(localStorage.getItem(masteredStorageKey) || '[]'));
+// 存储值可能被手动改坏(例如 "{}"),JSON.parse 抛错会让整个模块崩溃白屏,必须兜底
+function readStoredJSON(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+const masteredCases = new Set(readStoredJSON(masteredStorageKey, []));
 const testResultsStorageKey = 'cfop-3d-classroom-test-results-v1';
-const testResults = JSON.parse(localStorage.getItem(testResultsStorageKey) || '{}');
+const testResults = readStoredJSON(testResultsStorageKey, {});
 const pathExamResultsStorageKey = 'cfop-3d-classroom-path-exams-v1';
-const pathExamResults = JSON.parse(localStorage.getItem(pathExamResultsStorageKey) || '{}');
+const pathExamResults = readStoredJSON(pathExamResultsStorageKey, {});
 let currentAccount = null;
 let syncTimer = null;
 
