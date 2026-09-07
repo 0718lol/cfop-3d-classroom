@@ -24,7 +24,7 @@ export const algorithms = [
   {
     "id": "f2l-1",
     "category": "F2L",
-    "number": 2,
+    "number": 1,
     "name": "F2L 1",
     "group": "Free Pairs",
     "setup": "F R' F' R",
@@ -42,7 +42,7 @@ export const algorithms = [
   {
     "id": "f2l-3",
     "category": "F2L",
-    "number": 2,
+    "number": 3,
     "name": "F2L 3",
     "group": "Free Pairs",
     "setup": "F' U F",
@@ -51,7 +51,7 @@ export const algorithms = [
   {
     "id": "f2l-4",
     "category": "F2L",
-    "number": 2,
+    "number": 4,
     "name": "F2L 4",
     "group": "Free Pairs",
     "setup": "R U' R'",
@@ -60,7 +60,7 @@ export const algorithms = [
   {
     "id": "f2l-5",
     "category": "F2L",
-    "number": 2,
+    "number": 5,
     "name": "F2L 5",
     "group": "Disconnected Pairs",
     "setup": "R U R' U2 R U' R' U",
@@ -69,7 +69,7 @@ export const algorithms = [
   {
     "id": "f2l-6",
     "category": "F2L",
-    "number": 2,
+    "number": 6,
     "name": "F2L 6",
     "group": "Disconnected Pairs",
     "setup": "F' U' F U2 F' U F U'",
@@ -78,7 +78,7 @@ export const algorithms = [
   {
     "id": "f2l-7",
     "category": "F2L",
-    "number": 2,
+    "number": 7,
     "name": "F2L 7",
     "group": "Disconnected Pairs",
     "setup": "R U R' U2 R U2 R' U",
@@ -87,7 +87,7 @@ export const algorithms = [
   {
     "id": "f2l-8",
     "category": "F2L",
-    "number": 2,
+    "number": 8,
     "name": "F2L 8",
     "group": "Disconnected Pairs",
     "setup": "r' U' R2 U' R2 U2 r",
@@ -96,7 +96,7 @@ export const algorithms = [
   {
     "id": "f2l-9",
     "category": "F2L",
-    "number": 2,
+    "number": 9,
     "name": "F2L 9",
     "group": "Disconnected Pairs",
     "setup": "F' U F U' R U R' U",
@@ -105,7 +105,7 @@ export const algorithms = [
   {
     "id": "f2l-10",
     "category": "F2L",
-    "number": 2,
+    "number": 10,
     "name": "F2L 10",
     "group": "Disconnected Pairs",
     "setup": "R U' R' U' R U' R' U",
@@ -114,7 +114,7 @@ export const algorithms = [
   {
     "id": "f2l-11",
     "category": "F2L",
-    "number": 2,
+    "number": 11,
     "name": "F2L 11",
     "group": "Connected Pairs",
     "setup": "F' U F U' R U2 R' U",
@@ -123,7 +123,7 @@ export const algorithms = [
   {
     "id": "f2l-12",
     "category": "F2L",
-    "number": 2,
+    "number": 12,
     "name": "F2L 12",
     "group": "Connected Pairs",
     "setup": "R U R' U2 R U R' U' R U R'",
@@ -132,7 +132,7 @@ export const algorithms = [
   {
     "id": "f2l-13",
     "category": "F2L",
-    "number": 2,
+    "number": 13,
     "name": "F2L 13",
     "group": "Connected Pairs",
     "setup": "r U2 R' U R U' R' U M",
@@ -141,7 +141,7 @@ export const algorithms = [
   {
     "id": "f2l-14",
     "category": "F2L",
-    "number": 2,
+    "number": 14,
     "name": "F2L 14",
     "group": "Connected Pairs",
     "setup": "R U' R' U' R U R' U",
@@ -150,7 +150,7 @@ export const algorithms = [
   {
     "id": "f2l-15",
     "category": "F2L",
-    "number": 2,
+    "number": 15,
     "name": "F2L 15",
     "group": "Connected Pairs",
     "setup": "R U R' U' R U R' U2 R U' R'",
@@ -159,7 +159,7 @@ export const algorithms = [
   {
     "id": "f2l-16",
     "category": "F2L",
-    "number": 2,
+    "number": 16,
     "name": "F2L 16",
     "group": "Connected Pairs",
     "setup": "F' U F U2 R U R'",
@@ -168,7 +168,7 @@ export const algorithms = [
   {
     "id": "f2l-17",
     "category": "F2L",
-    "number": 2,
+    "number": 17,
     "name": "F2L 17",
     "group": "Connected Pairs",
     "setup": "R U' R' U R U2 R'",
@@ -177,7 +177,7 @@ export const algorithms = [
   {
     "id": "f2l-18",
     "category": "F2L",
-    "number": 2,
+    "number": 18,
     "name": "F2L 18",
     "group": "Connected Pairs",
     "setup": "R U R' U' R U R' F R' F' R",
@@ -186,7 +186,7 @@ export const algorithms = [
   {
     "id": "f2l-19",
     "category": "F2L",
-    "number": 2,
+    "number": 19,
     "name": "F2L 19",
     "group": "Disconnected Pairs",
     "setup": "R U R' U' R U2 R' U'",
@@ -195,7 +195,7 @@ export const algorithms = [
   {
     "id": "f2l-20",
     "category": "F2L",
-    "number": 2,
+    "number": 20,
     "name": "F2L 20",
     "group": "Disconnected Pairs",
     "setup": "R U R' F R' F' R2 U R' U",
@@ -204,7 +204,7 @@ export const algorithms = [
   {
     "id": "f2l-21",
     "category": "F2L",
-    "number": 2,
+    "number": 21,
     "name": "F2L 21",
     "group": "Disconnected Pairs",
     "setup": "R U' R' U2 R U R'",
@@ -213,7 +213,7 @@ export const algorithms = [
   {
     "id": "f2l-22",
     "category": "F2L",
-    "number": 2,
+    "number": 22,
     "name": "F2L 22",
     "group": "Disconnected Pairs",
     "setup": "F' L' U2 L F",
@@ -222,7 +222,7 @@ export const algorithms = [
   {
     "id": "f2l-23",
     "category": "F2L",
-    "number": 2,
+    "number": 23,
     "name": "F2L 23",
     "group": "Connected Pairs",
     "setup": "R U' R' U R U' R' U2 R U' R'",
@@ -231,7 +231,7 @@ export const algorithms = [
   {
     "id": "f2l-24",
     "category": "F2L",
-    "number": 2,
+    "number": 24,
     "name": "F2L 24",
     "group": "Connected Pairs",
     "setup": "R U R' F R U R' U' F'",
@@ -240,7 +240,7 @@ export const algorithms = [
   {
     "id": "f2l-25",
     "category": "F2L",
-    "number": 2,
+    "number": 25,
     "name": "F2L 25",
     "group": "Corner In Slot",
     "setup": "F' R U R' U' R' F R",
@@ -249,7 +249,7 @@ export const algorithms = [
   {
     "id": "f2l-26",
     "category": "F2L",
-    "number": 2,
+    "number": 26,
     "name": "F2L 26",
     "group": "Corner In Slot",
     "setup": "F' U' F U R U R' U'",
@@ -258,7 +258,7 @@ export const algorithms = [
   {
     "id": "f2l-27",
     "category": "F2L",
-    "number": 2,
+    "number": 27,
     "name": "F2L 27",
     "group": "Corner In Slot",
     "setup": "R U R' U' R U R'",
@@ -267,7 +267,7 @@ export const algorithms = [
   {
     "id": "f2l-28",
     "category": "F2L",
-    "number": 2,
+    "number": 28,
     "name": "F2L 28",
     "group": "Corner In Slot",
     "setup": "R' F R F' U R U' R'",
@@ -276,7 +276,7 @@ export const algorithms = [
   {
     "id": "f2l-29",
     "category": "F2L",
-    "number": 2,
+    "number": 29,
     "name": "F2L 29",
     "group": "Corner In Slot",
     "setup": "F R' F' R F R' F' R",
@@ -285,7 +285,7 @@ export const algorithms = [
   {
     "id": "f2l-30",
     "category": "F2L",
-    "number": 2,
+    "number": 30,
     "name": "F2L 30",
     "group": "Corner In Slot",
     "setup": "R U' R' U R U' R'",
@@ -294,7 +294,7 @@ export const algorithms = [
   {
     "id": "f2l-31",
     "category": "F2L",
-    "number": 2,
+    "number": 31,
     "name": "F2L 31",
     "group": "Edge In Slot",
     "setup": "R U R' F R' F' R U",
@@ -303,7 +303,7 @@ export const algorithms = [
   {
     "id": "f2l-32",
     "category": "F2L",
-    "number": 2,
+    "number": 32,
     "name": "F2L 32",
     "group": "Edge In Slot",
     "setup": "R U' R' U R U' R' U R U' R'",
@@ -312,7 +312,7 @@ export const algorithms = [
   {
     "id": "f2l-33",
     "category": "F2L",
-    "number": 2,
+    "number": 33,
     "name": "F2L 33",
     "group": "Edge In Slot",
     "setup": "R U R' U2 R U R' U",
@@ -321,7 +321,7 @@ export const algorithms = [
   {
     "id": "f2l-34",
     "category": "F2L",
-    "number": 2,
+    "number": 34,
     "name": "F2L 34",
     "group": "Edge In Slot",
     "setup": "R U' R' U2 R U' R' U'",
@@ -330,7 +330,7 @@ export const algorithms = [
   {
     "id": "f2l-35",
     "category": "F2L",
-    "number": 2,
+    "number": 35,
     "name": "F2L 35",
     "group": "Edge In Slot",
     "setup": "F' U F U' R U' R' U",
@@ -339,7 +339,7 @@ export const algorithms = [
   {
     "id": "f2l-36",
     "category": "F2L",
-    "number": 2,
+    "number": 36,
     "name": "F2L 36",
     "group": "Edge In Slot",
     "setup": "R U' R' U2 F R' F' R U2",
@@ -348,7 +348,7 @@ export const algorithms = [
   {
     "id": "f2l-37",
     "category": "F2L",
-    "number": 2,
+    "number": 37,
     "name": "F2L 37",
     "group": "Pieces In Slot",
     "setup": "R U' R U2 F R2 F' U2 R2",
@@ -357,7 +357,7 @@ export const algorithms = [
   {
     "id": "f2l-38",
     "category": "F2L",
-    "number": 2,
+    "number": 38,
     "name": "F2L 38",
     "group": "Pieces In Slot",
     "setup": "R U' R' U R U2 R' U R U' R'",
@@ -366,7 +366,7 @@ export const algorithms = [
   {
     "id": "f2l-39",
     "category": "F2L",
-    "number": 2,
+    "number": 39,
     "name": "F2L 39",
     "group": "Pieces In Slot",
     "setup": "R U' R' U' R U R' U2 R U' R'",
@@ -375,7 +375,7 @@ export const algorithms = [
   {
     "id": "f2l-40",
     "category": "F2L",
-    "number": 2,
+    "number": 40,
     "name": "F2L 40",
     "group": "Pieces In Slot",
     "setup": "R U R' F U R U' R' F' R U R'",
@@ -384,7 +384,7 @@ export const algorithms = [
   {
     "id": "f2l-41",
     "category": "F2L",
-    "number": 2,
+    "number": 41,
     "name": "F2L 41",
     "group": "Pieces In Slot",
     "setup": "R F U R U' R' F' U' R'",

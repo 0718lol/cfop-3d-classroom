@@ -83,4 +83,18 @@ for(const c of algorithms.filter(a=>a.category==='PLL')){
 console.log(`模拟器自检: ${failed===0?'通过':'失败'}`);
 console.log(`PLL 闭合: ${pass}/${total}`);
 if(pass!==total) failed++;
+
+// ── 编号唯一性:同一 category 内 number 不得重复 ──
+const byCategory = {};
+for(const c of algorithms) (byCategory[c.category] ||= []).push(c);
+for(const [category, list] of Object.entries(byCategory)){
+  const numbers = list.map(a=>a.number);
+  const unique = new Set(numbers).size;
+  check(unique === list.length, `${category} 编号重复: 只有 ${unique} 个唯一编号 / ${list.length} 条`);
+}
+// F2L 的 number 必须等于 id 尾号(f2l-N → N,主流约定:全类连续唯一 1-41)
+for(const c of algorithms.filter(a=>a.category==='F2L')){
+  check(c.number === parseInt(c.id.split('-')[1], 10), `F2L ${c.id} 的 number(${c.number})应等于 id 尾号`);
+}
+console.log(`编号唯一性(F2L/OLL/PLL/CROSS): ${failed===0?'通过':'失败'}`);
 process.exit(failed?1:0);
