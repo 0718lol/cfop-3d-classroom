@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "test": "node scripts/verify-algorithms.mjs"
+    "test": "node scripts/verify-algorithms.mjs && node scripts/verify-account-api.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.6.0"

@@ -188,6 +188,8 @@ const testResultsStorageKey = 'cfop-3d-classroom-test-results-v1';
 const testResults = readStoredJSON(testResultsStorageKey, {});
 const pathExamResultsStorageKey = 'cfop-3d-classroom-path-exams-v1';
 const pathExamResults = readStoredJSON(pathExamResultsStorageKey, {});
+const sessionAccountKey = 'cfop-3d-classroom-session-v1';
+const profileOwnerKey = 'cfop-3d-classroom-profile-owner-v1';
 let currentAccount = null;
 let syncTimer = null;
 
@@ -217,6 +219,35 @@ function syncProfile() {
   }, 250);
 }
 
+// 页面关闭/切走时防抖定时器可能没来得及触发,这里直接同步一次,保证服务器档案不落后
+function flushProfile() {
+  if (!currentAccount) return;
+  clearTimeout(syncTimer);
+  try {
+    fetch('/api/account', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: currentAccount, profile: localProfile() }), keepalive: true }).catch(() => {});
+  } catch { /* 网络不可用时的最终同步只能放弃 */ }
+}
+
+async function restoreSession() {
+  const savedName = localStorage.getItem(sessionAccountKey);
+  if (!savedName) return;
+  try {
+    const response = await fetch(`/api/account?name=${encodeURIComponent(savedName)}`);
+    if (!response.ok) {
+      localStorage.removeItem(sessionAccountKey);
+      return;
+    }
+    const record = await response.json();
+    currentAccount = record.name;
+    applyProfile(record.profile);
+    localStorage.setItem(profileOwnerKey, record.name);
+    setAccountLabel(currentAccount);
+    hideAuthScreen();
+    renderLesson();
+    await prepareCase();
+  } catch { /* 服务器不可达时停留在登录页,本地进度仍然可用 */ }
+}
+
 function setAccountLabel(name) { document.getElementById('accountName').textContent = name || '游客'; }
 
 function showAuthScreen() {
@@ -232,7 +263,9 @@ async function enterAccount(name, migrate = false) {
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || '无法接入档案');
   currentAccount = result.name;
+  localStorage.setItem(sessionAccountKey, result.name);
   applyProfile(result.profile);
+  localStorage.setItem(profileOwnerKey, result.name);
   setAccountLabel(currentAccount);
   hideAuthScreen();
   renderLesson();
@@ -241,6 +274,8 @@ async function enterAccount(name, migrate = false) {
 
 function enterGuest() {
   currentAccount = null;
+  localStorage.removeItem(sessionAccountKey);
+  localStorage.setItem(profileOwnerKey, 'guest');
   setAccountLabel('游客');
   hideAuthScreen();
 }
@@ -250,16 +285,33 @@ document.getElementById('authForm').addEventListener('submit', async event => {
   const input = document.getElementById('authName');
   const error = document.getElementById('authError');
   error.hidden = true;
-  try { await enterAccount(input.value.trim(), input.value.trim() === '王安畅'); }
+  // 只有本机缓存属于游客(或旧版未标记)时才把它迁移进账号,避免误把别人的进度并进来
+  const owner = localStorage.getItem(profileOwnerKey);
+  try { await enterAccount(input.value.trim(), owner === null || owner === 'guest'); }
   catch (reason) { error.textContent = reason.message; error.hidden = false; }
 });
 document.getElementById('guestEntry').addEventListener('click', enterGuest);
 document.getElementById('logoutAccount').addEventListener('click', () => {
+  // 退出前把最新进度推给服务器,随后清空本机缓存,避免共用设备上泄露上一位学员的进度
+  flushProfile();
   currentAccount = null;
+  clearTimeout(syncTimer);
+  localStorage.removeItem(sessionAccountKey);
+  localStorage.removeItem(profileOwnerKey);
+  localStorage.removeItem(masteredStorageKey);
+  localStorage.removeItem(testResultsStorageKey);
+  localStorage.removeItem(pathExamResultsStorageKey);
+  masteredCases.clear();
+  Object.keys(testResults).forEach(key => delete testResults[key]);
+  Object.keys(pathExamResults).forEach(key => delete pathExamResults[key]);
   document.getElementById('authName').value = '';
   document.getElementById('authError').hidden = true;
+  renderLesson();
+  prepareCase();
   showAuthScreen();
 });
+window.addEventListener('pagehide', flushProfile);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushProfile(); });
 
 function parseMove(notation) {
   const base = moveDefs[notation[0]];
@@ -933,3 +985,4 @@ renderLesson();
 prepareCase();
 resize();
 render();
+restoreSession();

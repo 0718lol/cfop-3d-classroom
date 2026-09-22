@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = __dirname;
-const storeDir = path.join(root, 'data');
+const storeDir = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(root, 'data');
 const storeFile = path.join(storeDir, 'users.json');
 fs.mkdirSync(storeDir, { recursive: true });
 if (!fs.existsSync(storeFile)) fs.writeFileSync(storeFile, '{}');
@@ -212,13 +212,38 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, { ok: true });
     } catch { return send(res, 400, { error: '请求格式无效' }); }
   }
+  if (url.pathname === '/api/account' && req.method === 'GET') {
+    // 只读查询,不创建账号:用于刷新页面后恢复会话
+    const name = String(url.searchParams.get('name') || '').trim().replace(/[<>]/g, '');
+    if (!name) return send(res, 400, { error: '缺少名字' });
+    try {
+      const record = await getUserRecord(name);
+      if (!record) return send(res, 404, { error: '账号不存在' });
+      return send(res, 200, record);
+    } catch { return send(res, 500, { error: '读取档案失败' }); }
+  }
+  if (url.pathname === '/api/health' && req.method === 'GET') {
+    return send(res, 200, { ok: true, storage: firebaseState ? 'firestore' : 'local' });
+  }
   if (url.pathname === '/' || !url.pathname.startsWith('/api/')) {
     const requested = url.pathname === '/' ? '/index.html' : url.pathname;
     const file = path.normalize(path.join(root, requested));
-    if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return send(res, 404, 'Not found', 'text/plain; charset=utf-8');
-    const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
-    return send(res, 200, fs.readFileSync(file), types[path.extname(file)] || 'application/octet-stream');
+    const relative = path.relative(root, file);
+    const types = {
+      '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
+      '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png',
+      '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.webmanifest': 'application/manifest+json'
+    };
+    // data 目录存放全部学员档案,绝不能当静态文件暴露;点开头文件与目录穿越一律拒绝
+    const extension = path.extname(file).toLowerCase();
+    const blocked = relative.startsWith('..')
+      || relative.split(path.sep).some(part => part === 'data' || part.startsWith('.'));
+    if (blocked || !types[extension] || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return send(res, 404, 'Not found', 'text/plain; charset=utf-8');
+    return send(res, 200, fs.readFileSync(file), types[extension]);
   }
   send(res, 404, { error: 'Not found' });
 });
-server.listen(Number(process.env.PORT) || 3000, '0.0.0.0');
+const port = process.env.PORT !== undefined && process.env.PORT !== '' ? Number(process.env.PORT) : 3000;
+server.listen(port, '0.0.0.0', () => {
+  console.log(`CFOP classroom listening on port ${server.address().port}`);
+});
