@@ -1,15 +1,35 @@
 # CFOP 3D Classroom
 
-An interactive 3D teaching tool for learning the CFOP method on a 3x3 Rubik's Cube.
+面向三阶魔方学习者与教学者的交互式 3D 教学工具。通过可旋转、可逐步回放的动画理解公式，再用分阶段练习、计时测试与复习记录巩固学习。
 
-## Contents
+An interactive 3D CFOP classroom with 134 training cases, four learning paths, timed practice and persistent learner profiles.
 
-- 41 standard F2L cases
-- 57 OLL algorithms
-- 21 PLL algorithms
-- Step-by-step and automatic playback
-- Support for face, wide, slice, and cube rotation notation
-- Responsive desktop and mobile layout
+## 案例范围与计数口径
+
+当前公开仓库包含 **134 个训练案例**：
+
+| 阶段 | 数量 | 训练内容 |
+| --- | ---: | --- |
+| Cross 十字 | 15 | 固定白底十字的观察、规划与复原练习 |
+| F2L 前两层 | 41 | 角块与棱块配对及插入 |
+| OLL 顶面定向 | 57 | 最后一层朝向调整 |
+| PLL 顶层排列 | 21 | 最后一层位置交换 |
+| **合计** | **134** | **15 个十字训练 + 119 个 F2L / OLL / PLL 案例** |
+
+此前介绍中的 **119** 指 F2L、OLL、PLL 三类案例的小计；**134** 将 15 个十字训练一并计入。两者是统计范围不同，并非两个版本的数量差异。十字训练、学习路径与学员档案均已包含在当前公开代码中。
+
+这里的数量指案例条目，不代表 134 套独立求解算法。教学中产生的学员数据、课程经营结果与学习效果统计，不随代码一同公开，也不能仅凭案例数量推导。
+
+## 教学与练习流程
+
+1. **选择学习路径**：起步、加速、进阶、精通四阶段，逐步扩展训练范围。
+2. **观察与演示**：查看案例打乱状态，旋转 3D 魔方，逐步或自动播放公式；支持面转、宽层转、中层转与整体旋转记号。
+3. **计时与复习**：完成单案例计时练习或路径结业测验，记录成功与待复习状态；路径测验超时案例自动加入待复习列表。
+4. **持续追踪**：按学员名称保存已掌握案例、测试结果与路径测验成绩，支持退出后重新载入，以及游客进度迁移。
+
+测试中的成功状态由学习者自行确认；当前不通过摄像头或智能魔方自动判断实体魔方是否复原。
+
+界面支持桌面与移动端布局。学员名称用于区分学习档案，当前为免密码访问，不是带身份验证的账号系统。
 
 ## Run locally
 
@@ -18,7 +38,7 @@ npm install
 npm start
 ```
 
-The app listens on `0.0.0.0:$PORT`.
+Open `http://localhost:3000/`. The server binds to `0.0.0.0`; set `PORT` to change the default port of `3000`.
 
 ## Backend & per-student memory
 
@@ -55,4 +75,4 @@ runs two regression suites: the algorithm data check and `scripts/verify-account
 
 ## Data source
 
-Case setup and algorithm data are based on the public algorithm sheets from [SpeedCubeDB](https://www.speedcubedb.com/).
+F2L, OLL and PLL case setup and algorithm data are based on the public algorithm sheets from [SpeedCubeDB](https://www.speedcubedb.com/). The Cross training set includes examples from [CubeZone's fixed-color Cross study](https://www.cubezone.be/crossstudy.html).
